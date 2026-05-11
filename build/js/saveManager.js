@@ -3,7 +3,7 @@
 // =====================================================
 'use strict';
 
-let isQuitMode = false;
+// let isQuitMode = false; (Already declared in state.js)
 
 async function renderSaveManager() {
   const container = document.getElementById('sm-slots');
