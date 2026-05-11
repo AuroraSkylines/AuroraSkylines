@@ -60,25 +60,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   async function handlePostAuth() {
-    // Hide auth screen
-    authScreen.classList.add('hidden');
-    
-    // Fetch cloud save
+    showLoading(true);
     try {
-      const cloudSave = await window.db.loadCloudSave();
-      if (cloudSave) {
-        // We have a cloud save, inject it into local storage for the game to pick up
-        localStorage.setItem(SAVE_KEY, JSON.stringify(cloudSave));
-        startGame(true);
-      } else {
-        // No cloud save exists, start a fresh city
-        localStorage.removeItem(SAVE_KEY);
-        startGame(false);
+      // Hide the auth overlay
+      authScreen.classList.add('hidden');
+      setTimeout(() => authScreen.style.display = 'none', 500);
+      
+      // Reveal the main menu
+      const mainMenu = document.getElementById('main-menu');
+      if (mainMenu) {
+        mainMenu.style.display = 'flex';
+        mainMenu.style.opacity = '1';
       }
-    } catch (err) {
-      console.error('Failed to load cloud save', err);
-      // Fallback to a fresh game if cloud load fails
-      startGame(false);
+      
+      // Ensure we are in background mode (menu mode)
+      if (typeof window.init === 'function') {
+        window.init(false, true); 
+      }
+    } catch (e) {
+      console.error("Post-auth error:", e);
+      location.reload(); 
     }
   }
 
