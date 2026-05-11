@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   btnLogin.addEventListener('click', async () => {
-    const user = document.getElementById('login-username').value;
+    const user = document.getElementById('login-username').value.trim();
     const pass = document.getElementById('login-password').value;
     showError(errLogin, '');
     showLoading(true);
@@ -97,9 +97,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   btnRegister.addEventListener('click', async () => {
-    const user = document.getElementById('reg-username').value;
+    const user = document.getElementById('reg-username').value.trim();
     const pass = document.getElementById('reg-password').value;
-    const key = document.getElementById('reg-invite').value;
+    const key = document.getElementById('reg-invite').value.trim().toUpperCase();
     showError(errReg, '');
     showLoading(true);
     try {
