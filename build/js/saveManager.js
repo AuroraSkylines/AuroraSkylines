@@ -11,53 +11,51 @@ async function renderSaveManager() {
   
   container.innerHTML = '<div class="sm-loading" style="color:#fff;font-family:var(--fu);font-size:14px;padding:20px;text-align:center;">Loading cloud saves...</div>';
 
-  let allSlots = {};
+  let cloudData = null;
   try {
-    const cloudData = await window.db.loadCloudSave();
-    if (cloudData && typeof cloudData === 'object') {
-       allSlots = cloudData;
-    }
+    cloudData = await window.db.loadCloudSave();
   } catch (e) {
     console.error("Cloud load fail:", e);
   }
 
   container.innerHTML = '';
-  SAVE_SLOTS.forEach((id, index) => {
-    const slot = allSlots[id];
-    const card = document.createElement('div');
-    card.className = 'sm-slot' + (slot ? ' has-save' : ' empty');
-    
-    if (slot) {
-      const date = new Date(slot.savedAt).toLocaleString();
-      card.innerHTML = `
-        <div class="sm-slot-num">${index + 1}</div>
-        <div class="sm-slot-info">
-          <div class="sm-slot-name">Slot ${index + 1} ${sessionStorage.getItem('aurora-active-slot') === id ? '<span class="sm-tag">ACTIVE</span>' : ''}</div>
-          <div class="sm-slot-ts">${date}</div>
-          <div class="sm-stats">
-            <div class="sm-stat">Day <span>${slot.day || 1}</span></div>
-            <div class="sm-stat">Budget <span>${slot.gold ? fmtEuro(slot.gold) : '0 €'}</span></div>
-          </div>
+  
+  // Single Slot Mode for Private Alpha
+  const id = SAVE_SLOTS[0];
+  const slot = cloudData; // In single slot mode, the payload IS the slot
+  
+  const card = document.createElement('div');
+  card.className = 'sm-slot' + (slot ? ' has-save sm-slot--active' : ' empty');
+  
+  if (slot && slot.savedAt) {
+    const date = new Date(slot.savedAt).toLocaleString();
+    card.innerHTML = `
+      <div class="sm-slot-num">1</div>
+      <div class="sm-slot-info">
+        <div class="sm-slot-name">Cloud Save <span class="sm-tag">READY</span></div>
+        <div class="sm-slot-ts">Last sync: ${date}</div>
+        <div class="sm-stats">
+          <div class="sm-stat">Day <span>${slot.day || 1}</span></div>
+          <div class="sm-stat">Budget <span>${slot.gold ? fmtEuro(slot.gold) : '0 €'}</span></div>
         </div>
-        <div class="sm-slot-actions">
-          <button class="sm-btn sm-btn--load" onclick="window.loadFromSlot('${id}')">Load</button>
-          <button class="sm-btn sm-btn--del" onclick="window.deleteSlot('${id}')">✕</button>
-        </div>
-      `;
-    } else {
-      card.innerHTML = `
-        <div class="sm-slot-num">${index + 1}</div>
-        <div class="sm-slot-info">
-          <div class="sm-slot-name">Slot ${index + 1}</div>
-          <div class="sm-slot-empty">Empty Slot</div>
-        </div>
-        <div class="sm-slot-actions">
-          <button class="sm-btn sm-btn--save" onclick="window.saveToSlot('${id}')">Save Here</button>
-        </div>
-      `;
-    }
-    container.appendChild(card);
-  });
+      </div>
+      <div class="sm-slot-actions">
+        <button class="sm-btn sm-btn--load" onclick="window.loadFromSlot('${id}')">Load City</button>
+      </div>
+    `;
+  } else {
+    card.innerHTML = `
+      <div class="sm-slot-num">1</div>
+      <div class="sm-slot-info">
+        <div class="sm-slot-name">New Cloud Slot</div>
+        <div class="sm-slot-empty">No city found in the cloud.</div>
+      </div>
+      <div class="sm-slot-actions">
+        <button class="sm-btn sm-btn--save" onclick="window.saveToSlot('${id}')">Start Here</button>
+      </div>
+    `;
+  }
+  container.appendChild(card);
 }
 
 function buildSavePayload() {
@@ -87,19 +85,12 @@ function buildSavePayload() {
 
 async function saveToSlot(id) {
   const payload = buildSavePayload();
-  let allSlots = {};
-  try {
-    const cloudData = await window.db.loadCloudSave();
-    if (cloudData && typeof cloudData === 'object') allSlots = cloudData;
-  } catch(e) {}
-  
-  allSlots[id] = payload;
-  await window.db.syncCloudSave(allSlots);
+  await window.db.syncCloudSave(payload);
   
   localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
   sessionStorage.setItem('aurora-active-slot', id);
   
-  if (typeof toast === 'function') toast(`Saved to Slot ${id.split('-').pop()}`, 'ok');
+  if (typeof toast === 'function') toast(`Saved to Cloud`, 'ok');
   
   if (isQuitMode) {
      location.reload();
@@ -110,15 +101,9 @@ async function saveToSlot(id) {
 }
 
 async function loadFromSlot(id) {
-  let allSlots = {};
-  try {
-    const cloudData = await window.db.loadCloudSave();
-    if (cloudData && typeof cloudData === 'object') allSlots = cloudData;
-  } catch(e) {}
-
-  if (!allSlots[id]) return;
+  const payload = await window.db.loadCloudSave();
+  if (!payload) return;
   
-  const payload = allSlots[id];
   localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
   sessionStorage.setItem('aurora-active-slot', id);
   
