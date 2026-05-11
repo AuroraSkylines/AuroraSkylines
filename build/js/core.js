@@ -293,11 +293,24 @@ function dismissLoadingScreen() {
 }
 
 function init(loadSave, bgMode = false){
-  isBackgroundMode = bgMode;
-  if (window.__auroraBoot && !isBackgroundMode) {
+  // If we are already in the requested mode, skip
+  if (window.__auroraBootMode === (bgMode ? 'bg' : 'game')) {
     return;
   }
-  window.__auroraBoot = true;
+  
+  const wasInBgMode = (window.__auroraBootMode === 'bg');
+  window.__auroraBootMode = bgMode ? 'bg' : 'game';
+  isBackgroundMode = bgMode;
+
+  // If we were in background mode and are now starting for real, just restore UI
+  if (wasInBgMode && !bgMode) {
+    document.body.classList.remove('is-background-mode');
+    gamePaused = false;
+    closePauseMenu();
+    recalc();
+    hudUpdate();
+    return;
+  }
 
   gamePaused = false;
   closePauseMenu();
