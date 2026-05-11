@@ -7,7 +7,7 @@
 const SUPABASE_URL = 'https://sgiyocgutsglftcuuwng.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNnaXlvY2d1dHNnbGZ0Y3V1d25nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjkyNDIsImV4cCI6MjA5NDEwNTI0Mn0.nvP2XXA72dz-Dt0EjXi94jM1Fl_4cIDFanKrhArLeTk';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const syntheticEmailSuffix = '@alphacity.local';
 
@@ -20,11 +20,11 @@ const db = {
   cloudSaveTimestamp: 0,
   
   async init() {
-    const { data: { session }, error } = await supabase.auth.getSession();
+    const { data: { session }, error } = await sb.auth.getSession();
     if (error) console.error('Auth session error:', error);
     this.session = session;
     
-    supabase.auth.onAuthStateChange((_event, session) => {
+    sb.auth.onAuthStateChange((_event, session) => {
       this.session = session;
     });
     
@@ -37,7 +37,7 @@ const db = {
     }
     const email = getSyntheticEmail(username);
     
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await sb.auth.signUp({
       email,
       password,
       options: {
@@ -62,7 +62,7 @@ const db = {
   async login(username, password) {
     if (!username || !password) throw new Error('Username and password are required');
     const email = getSyntheticEmail(username);
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await sb.auth.signInWithPassword({
       email,
       password
     });
@@ -71,14 +71,14 @@ const db = {
   },
   
   async logout() {
-    await supabase.auth.signOut();
+    await sb.auth.signOut();
     this.session = null;
     location.reload();
   },
   
   async loadCloudSave() {
     if (!this.session) return null;
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from('game_saves')
       .select('save_data, updated_at')
       .eq('user_id', this.session.user.id)
@@ -99,7 +99,7 @@ const db = {
   async syncCloudSave(payload) {
     if (!this.session) return;
     
-    const { data: currentData, error: fetchError } = await supabase
+    const { data: currentData, error: fetchError } = await sb
       .from('game_saves')
       .select('updated_at')
       .eq('user_id', this.session.user.id)
@@ -119,7 +119,7 @@ const db = {
       }
     }
     
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from('game_saves')
       .upsert({
         user_id: this.session.user.id,
