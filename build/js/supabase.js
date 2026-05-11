@@ -138,3 +138,4 @@ const db = {
 };
 
 window.db = db;
+console.log("Aurora Skylines: Database system initialized.", window.db);
