@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Aurora Skylines</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="auth.css"/>
+
+  <script>
+    var _audio = null;
+
+    function hasSave() {
+      try { return !!localStorage.getItem('aurora-skylines-save-v1'); } catch (e) { return false; }
+    }
+
+    function startGame(loadSave) {
+      var splash = document.getElementById('main-menu');
+      if (splash) splash.style.display = 'none';
+
+      try {
+        if (typeof init !== 'function') {
+          throw new Error('game.js did not load. Open the browser console (F12) and check for errors.');
+        }
+
+        _audio = document.getElementById('bgMusic');
+        if (_audio) {
+          _audio.volume = 0.34;
+          _audio.play().catch(function () {});
+        }
+
+        var slider = document.getElementById('music-vol');
+        var label = document.getElementById('vol-label');
+        if (slider && label && _audio) {
+          function setVol() {
+            var pct = parseInt(slider.value, 10) || 0;
+            _audio.volume = Math.pow(pct / 100, 2);
+            label.textContent = pct + '%';
+          }
+          slider.addEventListener('input', setVol);
+          slider.addEventListener('change', setVol);
+        }
+
+        var toggleBtn = document.getElementById('music-toggle');
+        if (toggleBtn && _audio) {
+          toggleBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (_audio.paused) {
+              _audio.play();
+              toggleBtn.textContent = 'Pause';
+              toggleBtn.classList.remove('paused');
+            } else {
+              _audio.pause();
+              toggleBtn.textContent = 'Play';
+              toggleBtn.classList.add('paused');
+            }
+          });
+        }
+
+        init(loadSave);
+      } catch (err) {
+        console.error(err);
+        try {
+          if (typeof dismissLoadingScreen === 'function') dismissLoadingScreen();
+        } catch (e2) {}
+        if (splash) splash.style.display = '';
+        alert(err && err.message ? err.message : String(err));
+      }
+    }
+
+    function openSaveManager() {
+      var el = document.getElementById('save-manager');
+      if (el) {
+        el.classList.add('sm-open');
+        el.setAttribute('aria-hidden', 'false');
+        if (typeof window.renderSaveManager === 'function') window.renderSaveManager();
+      }
+    }
+    function closeSaveManager() {
+      var el = document.getElementById('save-manager');
+      if (el) {
+        el.classList.remove('sm-open');
+        el.setAttribute('aria-hidden', 'true');
+      }
+    }
+    function startGameNew() {
+      if (confirm("Start a new game? This will clear your current temporary session.")) {
+        try { localStorage.removeItem('aurora-skylines-save-v1'); } catch (e) {}
+        sessionStorage.setItem('aurora-auto-start', 'true');
+        sessionStorage.removeItem('aurora-active-slot');
+        location.reload();
+      }
+    }
+
+    // Initialization handled by authUi.js
+  </script>
+</head>
+<body>
+  <div id="auth-screen" class="auth-overlay">
+    <div class="auth-card">
+      <div class="auth-header">
+        <h1>Aurora Skylines</h1>
+        <p class="auth-subtitle">Private Alpha Access</p>
+      </div>
+      <div class="auth-tabs">
+        <button id="tab-login" class="auth-tab active">Login</button>
+        <button id="tab-register" class="auth-tab">Register</button>
+      </div>
+      
+      <div id="auth-login-form" class="auth-form active">
+        <input type="text" id="login-username" placeholder="Username" class="auth-input">
+        <input type="password" id="login-password" placeholder="Password" class="auth-input">
+        <button id="btn-login" class="auth-btn">Enter City</button>
+        <div id="login-error" class="auth-error hidden"></div>
+      </div>
+
+      <div id="auth-register-form" class="auth-form hidden">
+        <input type="text" id="reg-username" placeholder="Username" class="auth-input">
+        <input type="password" id="reg-password" placeholder="Password" class="auth-input">
+        <input type="text" id="reg-invite" placeholder="Invite Key (e.g. CHILL-ALPHA-0001)" class="auth-input">
+        <button id="btn-register" class="auth-btn">Claim Access</button>
+        <div id="reg-error" class="auth-error hidden"></div>
+      </div>
+      <div id="auth-loading" class="auth-loading hidden">Authenticating...</div>
+    </div>
+  </div>
+
+
+  <audio id="bgMusic" loop>
+    <source src="music.mp3" type="audio/mpeg">
+  </audio>
+
+  <div id="main-menu">
+    <div class="menu-hero">🌆</div>
+    <div class="menu-game-title">Aurora Skylines</div>
+    <div class="menu-tagline">City builder</div>
+    
+    <div class="menu-actions">
+      <button type="button" class="menu-btn menu-btn--primary" id="btn-load" onclick="openSaveManager()">Load Game</button>
+      <button type="button" class="menu-btn menu-btn--ghost" id="btn-new" onclick="startGameNew()">New Game</button>
+      <button type="button" class="menu-btn menu-btn--ghost" id="btn-settings" onclick="document.getElementById('settings-overlay').classList.add('is-visible')">Settings</button>
+    </div>
+  </div>
+
+  <!-- ── SETTINGS OVERLAY ─────────────────── -->
+  <div id="settings-overlay" aria-hidden="true">
+    <div class="pause-backdrop" onclick="document.getElementById('settings-overlay').classList.remove('is-visible')"></div>
+    <div class="pause-card">
+      <h2 class="pause-title">Settings</h2>
+      <div class="pause-audio" style="margin-top:20px;">
+        <div class="pause-audio-head">Audio</div>
+        <div class="settings-row">
+          <label class="settings-label">Music</label>
+          <button type="button" id="music-toggle-main" class="music-toggle-btn">Pause</button>
+        </div>
+        <div class="settings-row">
+          <label class="settings-label">Volume</label>
+          <span id="vol-label-main">25%</span>
+        </div>
+        <input type="range" id="music-vol-main" min="0" max="100" value="25" class="vol-slider">
+      </div>
+
+      <div class="pause-audio" style="margin-top:20px;">
+        <div class="pause-audio-head">Menu Background</div>
+        <div class="settings-row">
+          <label class="settings-label">Live City Slot</label>
+          <select id="menu-bg-selector" class="settings-select" onchange="updateMenuBg(this.value)">
+            <option value="aurora-save-slot-1">Slot 1 (Default)</option>
+            <option value="aurora-save-slot-2">Slot 2</option>
+            <option value="aurora-save-slot-3">Slot 3</option>
+            <option value="aurora-save-slot-4">Slot 4</option>
+            <option value="aurora-save-slot-5">Slot 5</option>
+            <option value="aurora-save-slot-6">Slot 6</option>
+          </select>
+        </div>
+      </div>
+      <div class="pause-actions" style="margin-top:30px;">
+        <button type="button" class="pm-btn pm-btn--primary" onclick="document.getElementById('settings-overlay').classList.remove('is-visible')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="pause-overlay" aria-hidden="true">
+    <div class="pause-backdrop"></div>
+    <div class="pause-card">
+      <div class="pause-badge">⏸</div>
+      <h2 class="pause-title">Game paused</h2>
+      <p class="pause-hint">Press <kbd>ESC</kbd> or <kbd>P</kbd> to resume · <kbd>WASD</kbd> / arrows pan · mouse drag · wheel zoom</p>
+      <div class="pause-actions">
+        <button type="button" class="pm-btn pm-btn--primary" id="pause-resume">Resume</button>
+        <button type="button" class="pm-btn" id="pause-save-open">💾 Save manager</button>
+        <button type="button" class="pm-btn pm-btn--danger" id="pause-quit">Save &amp; quit to menu</button>
+      </div>
+      <div class="pause-audio">
+        <div class="pause-audio-head">Audio</div>
+        <div class="settings-row">
+          <label class="settings-label">Music</label>
+          <button type="button" id="music-toggle" class="music-toggle-btn">Pause</button>
+        </div>
+        <div class="settings-row">
+          <label class="settings-label">Volume</label>
+          <span id="vol-label">25%</span>
+        </div>
+        <input type="range" id="music-vol" min="0" max="100" value="25" class="vol-slider">
+      </div>
+      <p class="pause-foot">Saves use local storage on this computer.</p>
+    </div>
+  </div>
+
+  <!-- ── SAVE MANAGER ─────────────────────── -->
+  <div id="save-manager" aria-hidden="true">
+    <div class="sm-backdrop"></div>
+    <div class="sm-panel">
+      <div class="sm-head">
+        <div class="sm-title">💾 Save Manager</div>
+        <button type="button" class="sm-close" id="save-manager-close">✕</button>
+      </div>
+      <p class="sm-hint">6 save slots — each stores full city state with statistics.</p>
+      <div class="sm-slots sm-slots-target" id="sm-slots"></div>
+    </div>
+  </div>
+
+
+  <div id="day-cycle-wrap">
+    <div id="day-cycle-label">Next tax &amp; payout</div>
+    <div id="day-cycle-bar"><div id="day-cycle-fill"></div></div>
+  </div>
+
+  <div id="budget-anchor">
+    <div class="budget-diamond" aria-label="City budget">
+      <div class="budget-diamond__shine"></div>
+      <div class="budget-inner">
+        <span class="budget-label">Budget</span>
+        <span class="budget-amount" id="val-gold">2.000&nbsp;€</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="top-bar">
+    <div class="top-bar-spacer"></div>
+    <div id="hud-stats">
+      <div class="res-pill"><span class="pill-icon">👥</span><span class="rv" id="val-pop">0</span></div>
+      <div class="res-pill" id="pill-energy"><span class="pill-icon">⚡</span><span class="rv" id="val-energy">0</span></div>
+      <div class="res-pill day-pill"><span class="pill-icon">🌅</span> Day <span id="day-num">1</span></div>
+      <div id="income-preview">Next payout<span class="inc-val" id="val-income">+0&nbsp;€</span></div>
+    </div>
+  </div>
+
+  <p id="esc-hint"><kbd>ESC</kbd> · <kbd>P</kbd> menu</p>
+
+  <div class="fab-row">
+    <button type="button" class="fab" id="pause-fab" title="Menu (ESC or P)">⏸</button>
+    <button type="button" class="fab" id="upgrades-btn" title="City upgrades">⬆</button>
+  </div>
+
+  <div id="build-menu">
+    <div class="build-folders">
+      <div class="build-folder active" id="folder-roads">
+        <button type="button" class="build-btn active" data-type="road"><span class="bi">🛣️</span><span class="bl">Road</span><span class="bc">10&nbsp;€</span></button>
+      </div>
+      <div class="build-folder" id="folder-zones">
+        <button type="button" class="build-btn" data-type="house"><span class="bi">🏠</span><span class="bl">House</span><span class="bc">50&nbsp;€</span></button>
+        <button type="button" class="build-btn" data-type="apartment"><span class="bi">🏢</span><span class="bl">Apt</span><span class="bc">150&nbsp;€</span></button>
+        <button type="button" class="build-btn" data-type="shop"><span class="bi">🏪</span><span class="bl">Shop</span><span class="bc">80&nbsp;€</span></button>
+        <button type="button" class="build-btn" data-type="factory"><span class="bi">🏭</span><span class="bl">Factory</span><span class="bc">200&nbsp;€</span></button>
+      </div>
+      <div class="build-folder" id="folder-services">
+        <button type="button" class="build-btn" data-type="park"><span class="bi">🌳</span><span class="bl">Park</span><span class="bc">40&nbsp;€</span></button>
+        <button type="button" class="build-btn" data-type="windturbine"><span class="bi">💨</span><span class="bl">Wind</span><span class="bc">80&nbsp;€</span></button>
+        <button type="button" class="build-btn" data-type="solar"><span class="bi">☀️</span><span class="bl">Solar</span><span class="bc">150&nbsp;€</span></button>
+        <button type="button" class="build-btn" data-type="nuclear"><span class="bi">☢️</span><span class="bl">Nuclear</span><span class="bc">400&nbsp;€</span></button>
+      </div>
+      <div class="build-folder" id="folder-tools">
+        <button type="button" class="build-btn demo-btn" data-type="demolish"><span class="bi">🗑️</span><span class="bl">Demo</span><span class="bc">—</span></button>
+      </div>
+    </div>
+    <div class="build-categories">
+      <button type="button" class="cat-btn active" data-folder="folder-roads"><span class="cat-icon">🛣️</span> Roads</button>
+      <button type="button" class="cat-btn" data-folder="folder-zones"><span class="cat-icon">🏢</span> Zones</button>
+      <button type="button" class="cat-btn" data-folder="folder-services"><span class="cat-icon">⚡</span> Services</button>
+      <button type="button" class="cat-btn" data-folder="folder-tools"><span class="cat-icon">🔨</span> Tools</button>
+    </div>
+  </div>
+
+  <div id="upgrades-panel" class="hidden" aria-hidden="true">
+    <div class="upgrades-head">
+      <div class="upgrades-title">City upgrades<span>Invest in your skyline</span></div>
+      <button type="button" id="upgrades-close">✕</button>
+    </div>
+    <div id="upgrades-list"></div>
+  </div>
+
+  <div id="build-tooltip" class="hidden"></div>
+  <div id="confirm-modal" class="modal-overlay hidden">
+    <div class="confirm-card">
+      <div class="confirm-title">Are you sure?</div>
+      <div class="confirm-body" id="confirm-body">Do you really want to delete this city? This cannot be undone.</div>
+      <div class="confirm-actions">
+        <button type="button" class="confirm-btn confirm-btn--cancel" id="confirm-cancel">Cancel</button>
+        <button type="button" class="confirm-btn confirm-btn--danger" id="confirm-ok">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <div id="event-toast"></div>
+
+
+
+  <div id="loading">
+    <div class="load-inner">
+      <div class="load-city">
+        <div class="lb b1"></div><div class="lb b2"></div><div class="lb b3"></div>
+        <div class="lb b4"></div><div class="lb b5"></div>
+      </div>
+      <div class="load-title">AURORA</div>
+      <div class="load-sub">Skylines loading</div>
+    </div>
+  </div>
+
+  <script src="vendor/three.min.js"></script>
+  <script src="js/constants.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/saveManager.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/buildings.js"></script>
+  <script src="js/roads.js"></script>
+  <script src="js/traffic.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/core.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/authUi.js"></script>
+</body>
+</html>
