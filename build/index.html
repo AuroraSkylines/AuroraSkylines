@@ -93,9 +93,8 @@
     function startGameNew() {
       if (confirm("Start a new game? This will clear your current temporary session.")) {
         try { localStorage.removeItem('aurora-skylines-save-v1'); } catch (e) {}
-        sessionStorage.setItem('aurora-auto-start', 'true');
         sessionStorage.removeItem('aurora-active-slot');
-        location.reload();
+        startGame(false);
       }
     }
 

@@ -3,15 +3,56 @@
 // =====================================================
 'use strict';
 
-async function startGameNew() {
-  if (await customConfirm("Start a new city? This will wipe your current cloud save.", "Start New")) {
-    try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
-    // Clear cloud save by syncing empty payload if needed, or just let it overwrite later
-    if (window.db && window.db.session) {
-      await window.db.syncCloudSave(null); // Or {}
+let isQuitMode = false;
+
+async function renderSaveManager() {
+  const container = document.getElementById('sm-slots');
+  if (!container) return;
+  
+  container.innerHTML = '<div class="sm-loading" style="color:#fff;font-family:var(--fu);font-size:14px;padding:20px;text-align:center;">Loading cloud saves...</div>';
+
+  let allSlots = {};
+  try {
+    const cloudData = await window.db.loadCloudSave();
+    if (cloudData && typeof cloudData === 'object') {
+       allSlots = cloudData;
     }
-    location.reload();
+  } catch (e) {
+    console.error("Cloud load fail:", e);
   }
+
+  container.innerHTML = '';
+  SAVE_SLOTS.forEach((id, index) => {
+    const slot = allSlots[id];
+    const card = document.createElement('div');
+    card.className = 'sm-slot' + (slot ? ' has-save' : ' empty');
+    
+    if (slot) {
+      const date = new Date(slot.savedAt).toLocaleString();
+      card.innerHTML = `
+        <div class="sms-info">
+          <div class="sms-name">Slot ${index + 1}</div>
+          <div class="sms-date">${date}</div>
+          <div class="sms-stats">Day ${slot.day || 1} · ${slot.gold ? fmtEuro(slot.gold) : '0 €'}</div>
+        </div>
+        <div class="sms-actions">
+          <button class="sms-btn sms-btn--load" onclick="window.loadFromSlot('${id}')">Load</button>
+          <button class="sms-btn sms-btn--delete" onclick="window.deleteSlot('${id}')">✕</button>
+        </div>
+      `;
+    } else {
+      card.innerHTML = `
+        <div class="sms-info">
+          <div class="sms-name">Slot ${index + 1}</div>
+          <div class="sms-date">Empty Slot</div>
+        </div>
+        <div class="sms-actions">
+          <button class="sms-btn sms-btn--save" onclick="window.saveToSlot('${id}')">Save Here</button>
+        </div>
+      `;
+    }
+    container.appendChild(card);
+  });
 }
 
 function buildSavePayload() {
@@ -39,35 +80,82 @@ function buildSavePayload() {
   };
 }
 
-// Replaces local slot saving with a forced cloud sync
-async function saveToCloud() {
-  if (isBackgroundMode) return;
+async function saveToSlot(id) {
   const payload = buildSavePayload();
-  // Also keep a local backup just in case
-  localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+  let allSlots = {};
+  try {
+    const cloudData = await window.db.loadCloudSave();
+    if (cloudData && typeof cloudData === 'object') allSlots = cloudData;
+  } catch(e) {}
   
-  if (window.db && window.db.session) {
-    await window.db.syncCloudSave(payload);
-    if (typeof toast === 'function') toast('Synced to cloud ☁️', 'ok');
+  allSlots[id] = payload;
+  await window.db.syncCloudSave(allSlots);
+  
+  localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+  sessionStorage.setItem('aurora-active-slot', id);
+  
+  if (typeof toast === 'function') toast(`Saved to Slot ${id.split('-').pop()}`, 'ok');
+  
+  if (isQuitMode) {
+     location.reload();
+  } else {
+     closeSaveManager();
+     renderSaveManager();
   }
 }
 
-// We override the old save manager UI logic
-function openSaveManager() {
-  // Instead of opening a complex slot manager, just force a save for the alpha
-  saveToCloud();
-}
+async function loadFromSlot(id) {
+  let allSlots = {};
+  try {
+    const cloudData = await window.db.loadCloudSave();
+    if (cloudData && typeof cloudData === 'object') allSlots = cloudData;
+  } catch(e) {}
 
-function closeSaveManager() {
-  // No-op for cloud edition
-}
-
-// Hook into beforeunload to attempt a final save
-window.addEventListener('beforeunload', (e) => {
-  if (!isBackgroundMode && window.db && window.db.session) {
-    const payload = buildSavePayload();
-    localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
-    // Supabase async call might not finish, but we try
-    window.db.syncCloudSave(payload);
+  if (!allSlots[id]) return;
+  
+  const payload = allSlots[id];
+  localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+  sessionStorage.setItem('aurora-active-slot', id);
+  
+  closeSaveManager();
+  if (typeof startGame === 'function') {
+    startGame(true);
+  } else {
+    location.reload();
   }
-});
+}
+
+async function deleteSlot(id) {
+  if (!confirm("Delete this save slot?")) return;
+  
+  let allSlots = {};
+  try {
+    const cloudData = await window.db.loadCloudSave();
+    if (cloudData && typeof cloudData === 'object') allSlots = cloudData;
+  } catch(e) {}
+
+  delete allSlots[id];
+  await window.db.syncCloudSave(allSlots);
+  
+  renderSaveManager();
+}
+
+// Auto-save every 60s
+setInterval(() => {
+  const activeSlot = sessionStorage.getItem('aurora-active-slot');
+  if (!isBackgroundMode && window.db && window.db.session && activeSlot && !gamePaused) {
+    saveToSlot(activeSlot);
+  }
+}, 60000);
+
+// Export to window
+window.renderSaveManager = renderSaveManager;
+window.saveToSlot = saveToSlot;
+window.loadFromSlot = loadFromSlot;
+window.deleteSlot = deleteSlot;
+window.buildSavePayload = buildSavePayload;
+window.saveToCloud = () => {
+    const activeSlot = sessionStorage.getItem('aurora-active-slot');
+    if (activeSlot) saveToSlot(activeSlot);
+    else openSaveManager();
+};

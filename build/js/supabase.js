@@ -9,7 +9,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const syntheticEmailSuffix = '@alphacity.local';
+const syntheticEmailSuffix = '@auroracity.com';
 
 function getSyntheticEmail(username) {
   return username.trim().toLowerCase() + syntheticEmailSuffix;
