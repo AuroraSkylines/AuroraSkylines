@@ -30,24 +30,29 @@ async function renderSaveManager() {
     if (slot) {
       const date = new Date(slot.savedAt).toLocaleString();
       card.innerHTML = `
-        <div class="sms-info">
-          <div class="sms-name">Slot ${index + 1}</div>
-          <div class="sms-date">${date}</div>
-          <div class="sms-stats">Day ${slot.day || 1} · ${slot.gold ? fmtEuro(slot.gold) : '0 €'}</div>
+        <div class="sm-slot-num">${index + 1}</div>
+        <div class="sm-slot-info">
+          <div class="sm-slot-name">Slot ${index + 1} ${sessionStorage.getItem('aurora-active-slot') === id ? '<span class="sm-tag">ACTIVE</span>' : ''}</div>
+          <div class="sm-slot-ts">${date}</div>
+          <div class="sm-stats">
+            <div class="sm-stat">Day <span>${slot.day || 1}</span></div>
+            <div class="sm-stat">Budget <span>${slot.gold ? fmtEuro(slot.gold) : '0 €'}</span></div>
+          </div>
         </div>
-        <div class="sms-actions">
-          <button class="sms-btn sms-btn--load" onclick="window.loadFromSlot('${id}')">Load</button>
-          <button class="sms-btn sms-btn--delete" onclick="window.deleteSlot('${id}')">✕</button>
+        <div class="sm-slot-actions">
+          <button class="sm-btn sm-btn--load" onclick="window.loadFromSlot('${id}')">Load</button>
+          <button class="sm-btn sm-btn--del" onclick="window.deleteSlot('${id}')">✕</button>
         </div>
       `;
     } else {
       card.innerHTML = `
-        <div class="sms-info">
-          <div class="sms-name">Slot ${index + 1}</div>
-          <div class="sms-date">Empty Slot</div>
+        <div class="sm-slot-num">${index + 1}</div>
+        <div class="sm-slot-info">
+          <div class="sm-slot-name">Slot ${index + 1}</div>
+          <div class="sm-slot-empty">Empty Slot</div>
         </div>
-        <div class="sms-actions">
-          <button class="sms-btn sms-btn--save" onclick="window.saveToSlot('${id}')">Save Here</button>
+        <div class="sm-slot-actions">
+          <button class="sm-btn sm-btn--save" onclick="window.saveToSlot('${id}')">Save Here</button>
         </div>
       `;
     }
