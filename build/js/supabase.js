@@ -4,8 +4,8 @@
 'use strict';
 
 // IMPORTANT: Replace these with your actual Supabase URL and Anon Key before deployment
-const SUPABASE_URL = window.VITE_SUPABASE_URL || 'https://xyzcompany.supabase.co';
-const SUPABASE_KEY = window.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+const SUPABASE_URL = 'https://sgiyocgutsglftcuuwng.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNnaXlvY2d1dHNnbGZ0Y3V1d25nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjkyNDIsImV4cCI6MjA5NDEwNTI0Mn0.nvP2XXA72dz-Dt0EjXi94jM1Fl_4cIDFanKrhArLeTk';
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
