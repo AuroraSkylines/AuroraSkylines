@@ -7,55 +7,70 @@ let isQuitMode = false;
 
 async function renderSaveManager() {
   const container = document.getElementById('sm-slots');
-  if (!container) return;
+  if (!container) {
+    console.error("Save Manager: Container #sm-slots not found!");
+    return;
+  }
   
-  container.innerHTML = '<div class="sm-loading" style="color:#fff;font-family:var(--fu);font-size:14px;padding:20px;text-align:center;">Loading cloud saves...</div>';
+  container.innerHTML = '<div class="sm-loading" style="color:#fff;font-family:var(--fu);font-size:14px;padding:20px;text-align:center;">Loading cloud city...</div>';
 
   let cloudData = null;
   try {
-    cloudData = await window.db.loadCloudSave();
+    if (window.db && typeof window.db.loadCloudSave === 'function') {
+      cloudData = await window.db.loadCloudSave();
+    } else {
+      console.warn("Database not ready for cloud load.");
+    }
   } catch (e) {
-    console.error("Cloud load fail:", e);
+    console.error("Cloud load error:", e);
   }
 
   container.innerHTML = '';
   
-  // Single Slot Mode for Private Alpha
-  const id = SAVE_SLOTS[0];
-  const slot = cloudData; // In single slot mode, the payload IS the slot
-  
-  const card = document.createElement('div');
-  card.className = 'sm-slot' + (slot ? ' has-save sm-slot--active' : ' empty');
-  
-  if (slot && slot.savedAt) {
-    const date = new Date(slot.savedAt).toLocaleString();
-    card.innerHTML = `
-      <div class="sm-slot-num">1</div>
-      <div class="sm-slot-info">
-        <div class="sm-slot-name">Cloud Save <span class="sm-tag">READY</span></div>
-        <div class="sm-slot-ts">Last sync: ${date}</div>
-        <div class="sm-stats">
-          <div class="sm-stat">Day <span>${slot.day || 1}</span></div>
-          <div class="sm-stat">Budget <span>${slot.gold ? fmtEuro(slot.gold) : '0 €'}</span></div>
+  try {
+    // Single Slot Mode for Private Alpha
+    const id = (typeof SAVE_SLOTS !== 'undefined' && SAVE_SLOTS[0]) ? SAVE_SLOTS[0] : 'aurora-save-slot-1';
+    const slot = cloudData; 
+    
+    const card = document.createElement('div');
+    card.className = 'sm-slot' + (slot ? ' has-save sm-slot--active' : ' empty');
+    
+    if (slot && typeof slot === 'object') {
+      const date = slot.savedAt ? new Date(slot.savedAt).toLocaleString() : 'Recent Save';
+      const day = slot.day || 1;
+      const gold = slot.gold || 0;
+      
+      card.innerHTML = `
+        <div class="sm-slot-num">1</div>
+        <div class="sm-slot-info">
+          <div class="sm-slot-name">Cloud Save <span class="sm-tag">READY</span></div>
+          <div class="sm-slot-ts">Last sync: ${date}</div>
+          <div class="sm-stats">
+            <div class="sm-stat">Day <span>${day}</span></div>
+            <div class="sm-stat">Budget <span>${typeof fmtEuro === 'function' ? fmtEuro(gold) : gold + ' €'}</span></div>
+          </div>
         </div>
-      </div>
-      <div class="sm-slot-actions">
-        <button class="sm-btn sm-btn--load" onclick="window.loadFromSlot('${id}')">Load City</button>
-      </div>
-    `;
-  } else {
-    card.innerHTML = `
-      <div class="sm-slot-num">1</div>
-      <div class="sm-slot-info">
-        <div class="sm-slot-name">New Cloud Slot</div>
-        <div class="sm-slot-empty">No city found in the cloud.</div>
-      </div>
-      <div class="sm-slot-actions">
-        <button class="sm-btn sm-btn--save" onclick="window.saveToSlot('${id}')">Start Here</button>
-      </div>
-    `;
+        <div class="sm-slot-actions">
+          <button class="sm-btn sm-btn--load" onclick="window.loadFromSlot('${id}')">Load City</button>
+        </div>
+      `;
+    } else {
+      card.innerHTML = `
+        <div class="sm-slot-num">1</div>
+        <div class="sm-slot-info">
+          <div class="sm-slot-name">New Cloud Slot</div>
+          <div class="sm-slot-empty">No city found in the cloud yet.</div>
+        </div>
+        <div class="sm-slot-actions">
+          <button class="sm-btn sm-btn--save" onclick="window.saveToSlot('${id}')">Start Here</button>
+        </div>
+      `;
+    }
+    container.appendChild(card);
+  } catch (err) {
+    console.error("Render loop error:", err);
+    container.innerHTML = '<div style="color:#f87171;padding:20px;text-align:center;">Error displaying saves. Check console (F12).</div>';
   }
-  container.appendChild(card);
 }
 
 function buildSavePayload() {
