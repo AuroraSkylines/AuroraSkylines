@@ -84,16 +84,26 @@ function buildSavePayload() {
   };
 }
 
-async function saveToSlot(id) {
+async function saveToSlot(id, force = false) {
   const payload = buildSavePayload();
+  let syncResult = { success: true };
+
   if (window.db && window.db.syncCloudSave) {
-    await window.db.syncCloudSave(payload, id);
+    syncResult = await window.db.syncCloudSave(payload, id, force);
   }
   
   localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
   sessionStorage.setItem('aurora-active-slot', id);
   
-  if (typeof toast === 'function') toast(`Saved to Cloud (Slot ${id})`, 'ok');
+  if (syncResult && syncResult.error) {
+    if (syncResult.error === 'conflict') {
+      toast(`Cloud Conflict: A newer save exists on the server.`, 'warn');
+    } else {
+      toast(`Local Save OK, but Cloud Sync failed: ${syncResult.error}`, 'warn');
+    }
+  } else {
+    if (typeof toast === 'function') toast(`City Saved to Cloud (Slot ${id})`, 'ok');
+  }
   
   if (isQuitMode) {
      location.reload();
@@ -127,7 +137,7 @@ async function deleteSlot(id) {
   } catch(e) {}
 
   delete allSlots[id];
-  await window.db.syncCloudSave(allSlots);
+  await window.db.syncCloudSave(allSlots, id, true); // force delete
   
   renderSaveManager();
 }
@@ -136,18 +146,18 @@ async function deleteSlot(id) {
 setInterval(() => {
   const activeSlot = sessionStorage.getItem('aurora-active-slot');
   if (!isBackgroundMode && window.db && window.db.session && activeSlot && !gamePaused) {
-    saveToSlot(activeSlot);
+    saveToSlot(parseInt(activeSlot, 10), false); // Autosave is NOT forced
   }
 }, 60000);
 
 // Export to window
 window.renderSaveManager = renderSaveManager;
-window.saveToSlot = saveToSlot;
+window.saveToSlot = (id) => saveToSlot(id, true); // Manual clicks are forced
 window.loadFromSlot = loadFromSlot;
 window.deleteSlot = deleteSlot;
 window.buildSavePayload = buildSavePayload;
 window.saveToCloud = () => {
     const activeSlot = sessionStorage.getItem('aurora-active-slot');
-    if (activeSlot) saveToSlot(parseInt(activeSlot, 10));
+    if (activeSlot) saveToSlot(parseInt(activeSlot, 10), true);
     else openSaveManager();
 };

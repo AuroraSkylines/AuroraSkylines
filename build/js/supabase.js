@@ -17,7 +17,8 @@ function getSyntheticEmail(username) {
 
 const db = {
   session: null,
-  cloudSaveTimestamp: 0,
+  // Per-slot tracking to prevent cross-slot conflict false positives
+  slotTimestamps: {},
   
   async init() {
     const { data: { session }, error } = await sb.auth.getSession();
@@ -49,7 +50,6 @@ const db = {
     });
     
     if (error) {
-      // Clean up error message for user
       let msg = error.message;
       if (msg.includes('Database error saving new user')) {
          msg = 'Invalid or already used invite key.';
@@ -91,13 +91,13 @@ const db = {
     }
     
     if (data) {
-      this.cloudSaveTimestamp = new Date(data.updated_at).getTime();
+      this.slotTimestamps[slotId] = new Date(data.updated_at).getTime();
       return data.save_data;
     }
     return null;
   },
   
-  async syncCloudSave(payload, slotId = 1) {
+  async syncCloudSave(payload, slotId = 1, force = false) {
     if (!this.session) return;
     
     const { data: currentData, error: fetchError } = await sb
@@ -113,11 +113,14 @@ const db = {
     }
     
     // Conflict handling: last-write-wins protection
-    if (currentData) {
+    if (currentData && !force) {
       const serverTime = new Date(currentData.updated_at).getTime();
-      if (serverTime > this.cloudSaveTimestamp + 2000) {
-        console.warn('Conflict detected: Server has a newer save. Skipping local push to avoid overwriting.');
-        return;
+      const localKnownTime = this.slotTimestamps[slotId] || 0;
+      
+      // If server has a newer save and we didn't know about it (or it's > 5s newer than our last sync)
+      if (localKnownTime > 0 && serverTime > localKnownTime + 5000) {
+        console.warn(`Conflict detected in slot ${slotId}: Server has a newer save. Skipping local push.`);
+        return { error: 'conflict', serverTime };
       }
     }
     
@@ -125,7 +128,7 @@ const db = {
       .from('game_saves')
       .upsert({
         user_id: this.session.user.id,
-        slot_id: slotId,
+        slot_id: parseInt(slotId, 10), // Ensure integer
         save_data: payload,
         updated_at: new Date().toISOString()
       }, { onConflict: 'user_id,slot_id' })
@@ -134,8 +137,10 @@ const db = {
       
     if (error) {
       console.error('Error syncing to cloud:', error);
+      return { error: error.message };
     } else if (data) {
-      this.cloudSaveTimestamp = new Date(data.updated_at).getTime();
+      this.slotTimestamps[slotId] = new Date(data.updated_at).getTime();
+      return { success: true };
     }
   }
 };

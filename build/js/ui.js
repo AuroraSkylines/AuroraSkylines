@@ -319,9 +319,10 @@ document.getElementById('pause-quit')?.addEventListener('click', () => {
     return;
   }
   const activeSlot = sessionStorage.getItem('aurora-active-slot');
-  if (activeSlot && SAVE_SLOTS.includes(activeSlot)) {
+  const slotIdStr = activeSlot ? (activeSlot.includes('slot-') ? activeSlot : `aurora-save-slot-${activeSlot}`) : null;
+  if (slotIdStr && SAVE_SLOTS.includes(slotIdStr)) {
     isQuitMode = true;
-    saveToSlot(activeSlot);
+    saveToSlot(parseInt(activeSlot.replace(/\D/g, ''), 10));
   } else {
     isQuitMode = true;
     if (typeof openSaveManager === 'function') {
