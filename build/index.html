@@ -14,7 +14,45 @@
   <script src="js/supabase.js"></script>
   <script src="js/authUi.js"></script>
 
-    // Initialization handled by authUi.js
+    function hasSave() {
+      try { return !!localStorage.getItem('aurora-skylines-save-v1'); } catch (e) { return false; }
+    }
+
+    function startGame(loadSave) {
+      var mainMenu = document.getElementById('main-menu');
+      if (mainMenu) mainMenu.style.display = 'none';
+
+      if (typeof init === 'function') {
+        init(loadSave);
+      } else {
+        console.error('Game engine (core.js) not loaded yet.');
+      }
+    }
+
+    function startGameNew() {
+      if (confirm("Start a new game? This will clear your current temporary session.")) {
+        try { localStorage.removeItem('aurora-skylines-save-v1'); } catch (e) {}
+        sessionStorage.removeItem('aurora-active-slot');
+        startGame(false);
+      }
+    }
+
+    function openSaveManager() {
+      var el = document.getElementById('save-manager');
+      if (el) {
+        el.classList.add('sm-open');
+        el.setAttribute('aria-hidden', 'false');
+        if (typeof window.renderSaveManager === 'function') window.renderSaveManager();
+      }
+    }
+
+    function closeSaveManager() {
+      var el = document.getElementById('save-manager');
+      if (el) {
+        el.classList.remove('sm-open');
+        el.setAttribute('aria-hidden', 'true');
+      }
+    }
   </script>
 </head>
 <body>
