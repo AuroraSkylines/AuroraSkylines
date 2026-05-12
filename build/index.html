@@ -128,9 +128,9 @@
       <h2 class="pause-title">Settings</h2>
       
       <div class="settings-tabs">
-        <button class="settings-tab active" onclick="switchSettingsTab('graphics')">Graphics</button>
-        <button class="settings-tab" onclick="switchSettingsTab('audio')">Audio</button>
-        <button class="settings-tab" onclick="switchSettingsTab('gameplay')">Gameplay</button>
+        <button class="settings-tab active" onclick="switchSettingsTab(this, 'settings-tab-graphics')">Graphics</button>
+        <button class="settings-tab" onclick="switchSettingsTab(this, 'settings-tab-audio')">Audio</button>
+        <button class="settings-tab" onclick="switchSettingsTab(this, 'settings-tab-gameplay')">Gameplay</button>
       </div>
 
       <div id="settings-tab-graphics" class="settings-panel active">
@@ -184,11 +184,17 @@
   </div>
 
   <script>
-    function switchSettingsTab(tabId) {
-      document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.settings-panel').forEach(p => p.classList.add('hidden'));
-      event.target.classList.add('active');
-      document.getElementById('settings-tab-' + tabId).classList.remove('hidden');
+    function switchSettingsTab(btn, tabId) {
+      const card = btn.closest('.pause-card');
+      card.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+      card.querySelectorAll('.settings-panel').forEach(p => p.classList.add('hidden'));
+      btn.classList.add('active');
+      document.getElementById(tabId).classList.remove('hidden');
+    }
+    function applyDaySpeed(val) {
+      if (typeof state !== 'undefined') {
+        state.DAY_LEN = 30 / parseFloat(val);
+      }
     }
   </script>
 
@@ -196,28 +202,71 @@
 
   <div id="pause-overlay" aria-hidden="true">
     <div class="pause-backdrop"></div>
-    <div class="pause-card">
-      <div class="pause-badge">⏸</div>
-      <h2 class="pause-title">Game paused</h2>
-      <p class="pause-hint">Press <kbd>ESC</kbd> or <kbd>P</kbd> to resume · <kbd>WASD</kbd> / arrows pan · mouse drag · wheel zoom</p>
-      <div class="pause-actions">
-        <button type="button" class="pm-btn pm-btn--primary" id="pause-resume">Resume</button>
-        <button type="button" class="pm-btn" id="pause-save-open">💾 Save manager</button>
-        <button type="button" class="pm-btn pm-btn--danger" id="pause-quit">Save &amp; quit to menu</button>
-      </div>
-      <div class="pause-audio">
-        <div class="pause-audio-head">Audio</div>
-        <div class="settings-row">
-          <label class="settings-label">Music</label>
-          <button type="button" id="music-toggle" class="music-toggle-btn">Pause</button>
+    <div class="pause-card pause-card--wide">
+
+      <!-- Header -->
+      <div class="pause-header">
+        <div class="pause-badge">⏸</div>
+        <div>
+          <h2 class="pause-title">Game Paused</h2>
+          <p class="pause-hint"><kbd>ESC</kbd> / <kbd>P</kbd> to resume</p>
         </div>
-        <div class="settings-row">
-          <label class="settings-label">Volume</label>
-          <span id="vol-label">25%</span>
-        </div>
-        <input type="range" id="music-vol" min="0" max="100" value="25" class="vol-slider">
       </div>
-      <p class="pause-foot">Saves use local storage on this computer.</p>
+
+      <!-- Tabs -->
+      <div class="settings-tabs">
+        <button class="settings-tab active" onclick="switchSettingsTab(this, 'pause-tab-game')">Game</button>
+        <button class="settings-tab" onclick="switchSettingsTab(this, 'pause-tab-audio')">Audio</button>
+        <button class="settings-tab" onclick="switchSettingsTab(this, 'pause-tab-settings')">Settings</button>
+      </div>
+
+      <!-- Tab: Game -->
+      <div id="pause-tab-game" class="settings-panel">
+        <div class="pause-actions">
+          <button type="button" class="pm-btn pm-btn--primary" id="pause-resume">▶ Resume</button>
+          <button type="button" class="pm-btn" id="pause-save-open">💾 Save Manager</button>
+          <button type="button" class="pm-btn pm-btn--danger" id="pause-quit">Save &amp; Quit to Menu</button>
+        </div>
+        <p class="pause-foot"><kbd>WASD</kbd> / arrows pan &nbsp;·&nbsp; drag to pan &nbsp;·&nbsp; wheel to zoom</p>
+      </div>
+
+      <!-- Tab: Audio -->
+      <div id="pause-tab-audio" class="settings-panel hidden">
+        <div class="pause-audio" style="margin-top:10px; border-top:none; padding-top:0;">
+          <div class="settings-row">
+            <label class="settings-label">Music</label>
+            <button type="button" id="music-toggle" class="music-toggle-btn">Pause</button>
+          </div>
+          <div class="settings-row">
+            <label class="settings-label">Volume</label>
+            <span id="vol-label">25%</span>
+          </div>
+          <input type="range" id="music-vol" min="0" max="100" value="25" class="vol-slider">
+        </div>
+      </div>
+
+      <!-- Tab: Settings -->
+      <div id="pause-tab-settings" class="settings-panel hidden">
+        <div class="pause-audio" style="margin-top:10px; border-top:none; padding-top:0;">
+          <div class="settings-row">
+            <label class="settings-label">Graphics API</label>
+            <span class="settings-value" id="pause-gfx-api">WebGL 2.0</span>
+          </div>
+          <div class="settings-row">
+            <label class="settings-label">Micro-stutter Guard</label>
+            <span class="settings-value" id="pause-stutter">—</span>
+          </div>
+          <div class="settings-row">
+            <label class="settings-label">Day Speed</label>
+            <select class="settings-select" id="pause-day-speed" onchange="applyDaySpeed(this.value)">
+              <option value="1">Normal (1×)</option>
+              <option value="2">Fast (2×)</option>
+              <option value="0.5">Slow (0.5×)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 

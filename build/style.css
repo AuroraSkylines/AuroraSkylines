@@ -542,6 +542,30 @@ body.game-paused #gameCanvas {
   padding: 28px 26px 22px;
   box-shadow: var(--shadow), 0 0 80px rgba(168,85,247,0.15);
 }
+.pause-card--wide {
+  width: min(460px, 100%);
+}
+.pause-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 4px;
+}
+.pause-header .pause-badge {
+  position: static;
+  transform: none;
+  left: auto;
+  top: auto;
+  flex-shrink: 0;
+}
+.pause-header .pause-title {
+  margin-top: 0;
+  text-align: left;
+}
+.pause-header .pause-hint {
+  margin: 4px 0 0 0;
+  text-align: left;
+}
 .pause-badge {
   position: absolute;
   top: -18px;
