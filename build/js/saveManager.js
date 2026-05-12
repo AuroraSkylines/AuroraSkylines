@@ -40,6 +40,11 @@ async function renderSaveManager() {
       const day = slot.day || 1;
       const gold = slot.gold || 0;
       
+      const inMenu = (typeof isBackgroundMode === 'undefined') || isBackgroundMode;
+      const actionBtn = inMenu 
+        ? `<button class="sm-btn sm-btn--load" onclick="window.loadFromSlot('${id}')">Load City</button>`
+        : `<button class="sm-btn sm-btn--save" onclick="window.saveToSlot('${id}')">Save Current</button>`;
+
       card.innerHTML = `
         <div class="sm-slot-num">1</div>
         <div class="sm-slot-info">
@@ -51,7 +56,7 @@ async function renderSaveManager() {
           </div>
         </div>
         <div class="sm-slot-actions">
-          <button class="sm-btn sm-btn--load" onclick="window.loadFromSlot('${id}')">Load City</button>
+          ${actionBtn}
         </div>
       `;
     } else {
