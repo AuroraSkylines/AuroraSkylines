@@ -234,38 +234,43 @@ function seedBackgroundCity() {
   recalc();
 }
 
-function loadMenuBackgroundCity() {
-  const slotKey = localStorage.getItem('aurora-menu-bg-slot') || SAVE_SLOTS[0];
-  let raw = localStorage.getItem(slotKey);
+async function loadMenuBackgroundCity() {
+  const slotId = parseInt(localStorage.getItem('aurora-menu-bg-slot') || '1', 10);
   
-  if (!raw && slotKey === SAVE_SLOTS[0]) {
-    raw = localStorage.getItem(SAVE_KEY);
-  }
-
-  if (raw) {
+  let data = null;
+  if (window.db && window.db.session) {
     try {
-      const data = JSON.parse(raw);
-      if (data && data.grid) {
-        state.grid = data.grid;
-        state.gold = data.gold ?? 2000;
-        state.day = data.day ?? 1;
-        state.dayTimer = data.dayTimer ?? 0;
-        UPGRADE_DEFS.forEach(u => {
-          state.upgradeLevels[u.id] = data.upgradeLevels?.[u.id] ?? 0;
-        });
-        rebuildAllMeshes();
-        recalc();
-        return;
-      }
+      data = await window.db.loadCloudSave(slotId);
     } catch(e) {}
   }
-  seedBackgroundCity();
-  rebuildAllMeshes();
+  
+  if (!data) {
+    const raw = localStorage.getItem('aurora-save-slot-' + slotId) || localStorage.getItem(SAVE_KEY);
+    if (raw) {
+      try { data = JSON.parse(raw); } catch(e) {}
+    }
+  }
+
+  if (data && data.grid) {
+    state.grid = data.grid;
+    state.gold = data.gold ?? 2000;
+    state.day = data.day ?? 1;
+    state.dayTimer = data.dayTimer ?? 0;
+    UPGRADE_DEFS.forEach(u => {
+      state.upgradeLevels[u.id] = data.upgradeLevels?.[u.id] ?? 0;
+    });
+    rebuildAllMeshes();
+    recalc();
+  } else {
+    seedBackgroundCity();
+    rebuildAllMeshes();
+  }
 }
 
-function updateMenuBg(slotKey) {
-  localStorage.setItem('aurora-menu-bg-slot', slotKey);
-  location.reload();
+async function updateMenuBg(slotVal) {
+  const slotId = parseInt(slotVal.replace('aurora-save-slot-', ''), 10) || 1;
+  localStorage.setItem('aurora-menu-bg-slot', slotId);
+  await loadMenuBackgroundCity();
 }
 
 function loadGameFromStorage() {
