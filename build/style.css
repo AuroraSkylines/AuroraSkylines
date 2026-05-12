@@ -603,6 +603,33 @@ body.game-paused #gameCanvas {
 }
 .pm-btn:hover { background: rgba(255,255,255,0.15); transform: translateY(-1px); }
 
+/* Settings Tabs */
+.settings-tabs {
+  display: flex; gap: 8px; margin: 20px 0 16px 0;
+  background: rgba(255,255,255,0.05); padding: 6px; border-radius: 14px;
+}
+.settings-tab {
+  flex: 1; padding: 10px; border: none; background: transparent;
+  color: rgba(255,255,255,0.5); font-family: var(--fd); font-weight: 700;
+  font-size: 13px; border-radius: 10px; cursor: pointer; transition: all 0.2s;
+}
+.settings-tab.active {
+  background: rgba(255,255,255,0.1); color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.settings-panel {
+  display: block;
+}
+.settings-panel.hidden {
+  display: none;
+}
+.settings-value {
+  font-family: var(--fu);
+  font-size: 13px;
+  color: #fff;
+  font-weight: 600;
+}
+
 #vol-label, #vol-label-main {
   font-family: var(--fd);
   font-weight: 800;

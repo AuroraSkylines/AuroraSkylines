@@ -126,38 +126,71 @@
     <div class="pause-backdrop" onclick="document.getElementById('settings-overlay').classList.remove('is-visible')"></div>
     <div class="pause-card">
       <h2 class="pause-title">Settings</h2>
-      <div class="pause-audio" style="margin-top:20px;">
-        <div class="pause-audio-head">Audio</div>
-        <div class="settings-row">
-          <label class="settings-label">Music</label>
-          <button type="button" id="music-toggle-main" class="music-toggle-btn">Pause</button>
-        </div>
-        <div class="settings-row">
-          <label class="settings-label">Volume</label>
-          <span id="vol-label-main">25%</span>
-        </div>
-        <input type="range" id="music-vol-main" min="0" max="100" value="25" class="vol-slider">
+      
+      <div class="settings-tabs">
+        <button class="settings-tab active" onclick="switchSettingsTab('graphics')">Graphics</button>
+        <button class="settings-tab" onclick="switchSettingsTab('audio')">Audio</button>
+        <button class="settings-tab" onclick="switchSettingsTab('gameplay')">Gameplay</button>
       </div>
 
-      <div class="pause-audio" style="margin-top:20px;">
-        <div class="pause-audio-head">Menu Background</div>
-        <div class="settings-row">
-          <label class="settings-label">Live City Slot</label>
-          <select id="menu-bg-selector" class="settings-select" onchange="updateMenuBg(this.value)">
-            <option value="aurora-save-slot-1">Slot 1 (Default)</option>
-            <option value="aurora-save-slot-2">Slot 2</option>
-            <option value="aurora-save-slot-3">Slot 3</option>
-            <option value="aurora-save-slot-4">Slot 4</option>
-            <option value="aurora-save-slot-5">Slot 5</option>
-            <option value="aurora-save-slot-6">Slot 6</option>
-          </select>
+      <div id="settings-tab-graphics" class="settings-panel active">
+        <div class="pause-audio" style="margin-top:10px; border-top:none; padding-top:0;">
+          <div class="settings-row">
+            <label class="settings-label">Graphics API</label>
+            <span class="settings-value">WebGL 2.0</span>
+          </div>
+          <div class="settings-row">
+            <label class="settings-label">Resolution</label>
+            <span class="settings-value">Native</span>
+          </div>
+          <p class="pause-hint" style="margin-top:20px;">More graphics settings coming soon...</p>
         </div>
       </div>
+
+      <div id="settings-tab-audio" class="settings-panel hidden">
+        <div class="pause-audio" style="margin-top:10px; border-top:none; padding-top:0;">
+          <div class="settings-row">
+            <label class="settings-label">Music</label>
+            <button type="button" id="music-toggle-main" class="music-toggle-btn">Pause</button>
+          </div>
+          <div class="settings-row">
+            <label class="settings-label">Volume</label>
+            <span id="vol-label-main">25%</span>
+          </div>
+          <input type="range" id="music-vol-main" min="0" max="100" value="25" class="vol-slider">
+        </div>
+      </div>
+
+      <div id="settings-tab-gameplay" class="settings-panel hidden">
+        <div class="pause-audio" style="margin-top:10px; border-top:none; padding-top:0;">
+          <div class="settings-row">
+            <label class="settings-label">Menu Background Slot</label>
+            <select id="menu-bg-selector" class="settings-select" onchange="updateMenuBg(this.value)">
+              <option value="aurora-save-slot-1">Slot 1 (Default)</option>
+              <option value="aurora-save-slot-2">Slot 2</option>
+              <option value="aurora-save-slot-3">Slot 3</option>
+              <option value="aurora-save-slot-4">Slot 4</option>
+              <option value="aurora-save-slot-5">Slot 5</option>
+              <option value="aurora-save-slot-6">Slot 6</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div class="pause-actions" style="margin-top:30px;">
         <button type="button" class="pm-btn pm-btn--primary" onclick="document.getElementById('settings-overlay').classList.remove('is-visible')">Close</button>
       </div>
     </div>
   </div>
+
+  <script>
+    function switchSettingsTab(tabId) {
+      document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.settings-panel').forEach(p => p.classList.add('hidden'));
+      event.target.classList.add('active');
+      document.getElementById('settings-tab-' + tabId).classList.remove('hidden');
+    }
+  </script>
 
   <canvas id="gameCanvas"></canvas>
 
