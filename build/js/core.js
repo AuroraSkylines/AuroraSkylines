@@ -6,8 +6,7 @@
 function tickDay(dt){
   state.dayTimer+=dt;
   updateDayBar();
-  const cycle = 0.62 + 0.38 * Math.sin((state.dayTimer / state.DAY_LEN) * Math.PI * 2);
-  applySkyPhase(cycle * (0.55 + 0.45 * (0.5 + 0.5 * Math.sin(state.day * 0.25))));
+  applySkyPhase(state.dayTimer / state.DAY_LEN);
 
   if(state.dayTimer<state.DAY_LEN)return;
   state.dayTimer=0; state.day++;
@@ -449,13 +448,25 @@ function animate(now){
     if (keys.d || keys.arrowright) camTarget.x += pan;
     if (keys.w || keys.s || keys.a || keys.d || keys.arrowup || keys.arrowdown || keys.arrowleft || keys.arrowright) clampCam();
 
-    if (!isBackgroundMode) tickDay(dt);
+    if (!isBackgroundMode) {
+      tickDay(dt);
+    } else {
+      state.dayTimer += dt;
+      if (state.dayTimer > state.DAY_LEN) state.dayTimer = 0;
+      applySkyPhase(state.dayTimer / state.DAY_LEN);
+    }
     const tgt=new THREE.Vector3(camTarget.x,0,camTarget.z);
     camera.position.lerp(tgt.clone().add(CAM_OFF),.085);
     camera.lookAt(tgt);
 
-    const sunAngle = performance.now()*0.00006;
-    sun.position.set(Math.cos(sunAngle)*40,40+Math.sin(sunAngle*0.6)*10,Math.sin(sunAngle)*38);
+    // Sun and moon orbit based on time of day (phase 0 -> 1)
+    const phase = state.dayTimer / state.DAY_LEN;
+    const sunAngle = -Math.PI/2 + (phase * Math.PI * 2); // starts at -PI/2 (bottom), reaches 0 (east) at dawn, PI/2 (top) at noon, PI (west) at dusk
+    sun.position.set(Math.sin(sunAngle)*45, Math.cos(sunAngle)*40, Math.sin(sunAngle)*15);
+    if (typeof moonLight !== 'undefined') {
+      const moonAngle = sunAngle + Math.PI; // opposite to sun
+      moonLight.position.set(Math.sin(moonAngle)*45, Math.cos(moonAngle)*40, Math.sin(moonAngle)*15);
+    }
 
     animPart(dt);
     updateCars(dt);

@@ -136,14 +136,43 @@
       <div id="settings-tab-graphics" class="settings-panel active">
         <div class="pause-audio" style="margin-top:10px; border-top:none; padding-top:0;">
           <div class="settings-row">
-            <label class="settings-label">Graphics API</label>
-            <span class="settings-value">WebGL 2.0</span>
+            <label class="settings-label">Shadow Quality</label>
+            <select id="gfx-shadow" class="settings-select" onchange="setGraphicsQuality('shadowQuality', this.value)">
+              <option value="off">Off</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
           </div>
           <div class="settings-row">
-            <label class="settings-label">Resolution</label>
-            <span class="settings-value">Native</span>
+            <label class="settings-label">Render Distance</label>
+            <select id="gfx-distance" class="settings-select" onchange="setGraphicsQuality('renderDistance', this.value)">
+              <option value="near">Near</option>
+              <option value="medium">Medium</option>
+              <option value="far">Far</option>
+            </select>
           </div>
-          <p class="pause-hint" style="margin-top:20px;">More graphics settings coming soon...</p>
+          <div class="settings-row">
+            <label class="settings-label">Particle Effects</label>
+            <select id="gfx-particles" class="settings-select" onchange="setGraphicsQuality('particles', this.value)">
+              <option value="on">On</option>
+              <option value="off">Off</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <label class="settings-label">Street Lights</label>
+            <select id="gfx-lights" class="settings-select" onchange="setGraphicsQuality('streetLights', this.value)">
+              <option value="on">On</option>
+              <option value="off">Off</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <label class="settings-label">Water Effects</label>
+            <select id="gfx-water" class="settings-select" onchange="setGraphicsQuality('waterEffects', this.value)">
+              <option value="on">On</option>
+              <option value="off">Off</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -248,14 +277,43 @@
       <div id="igs-tab-graphics" class="settings-panel">
         <div class="pause-audio" style="margin-top:10px; border-top:none; padding-top:0;">
           <div class="settings-row">
-            <label class="settings-label">Graphics API</label>
-            <span class="settings-value">WebGL 2.0</span>
+            <label class="settings-label">Shadow Quality</label>
+            <select id="igs-gfx-shadow" class="settings-select" onchange="setGraphicsQuality('shadowQuality', this.value); document.getElementById('gfx-shadow').value = this.value;">
+              <option value="off">Off</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
           </div>
           <div class="settings-row">
-            <label class="settings-label">Resolution</label>
-            <span class="settings-value">Native</span>
+            <label class="settings-label">Render Distance</label>
+            <select id="igs-gfx-distance" class="settings-select" onchange="setGraphicsQuality('renderDistance', this.value); document.getElementById('gfx-distance').value = this.value;">
+              <option value="near">Near</option>
+              <option value="medium">Medium</option>
+              <option value="far">Far</option>
+            </select>
           </div>
-          <p class="pause-hint" style="margin-top:20px;">More graphics settings coming soon...</p>
+          <div class="settings-row">
+            <label class="settings-label">Particle Effects</label>
+            <select id="igs-gfx-particles" class="settings-select" onchange="setGraphicsQuality('particles', this.value); document.getElementById('gfx-particles').value = this.value;">
+              <option value="on">On</option>
+              <option value="off">Off</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <label class="settings-label">Street Lights</label>
+            <select id="igs-gfx-lights" class="settings-select" onchange="setGraphicsQuality('streetLights', this.value); document.getElementById('gfx-lights').value = this.value;">
+              <option value="on">On</option>
+              <option value="off">Off</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <label class="settings-label">Water Effects</label>
+            <select id="igs-gfx-water" class="settings-select" onchange="setGraphicsQuality('waterEffects', this.value); document.getElementById('gfx-water').value = this.value;">
+              <option value="on">On</option>
+              <option value="off">Off</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -394,6 +452,24 @@
   </div>
 
   <script src="vendor/three.min.js"></script>
+  <script src="js/gfx.js"></script>
+  <script>
+    // Initialize UI dropdowns with values from gfxManager
+    document.addEventListener('DOMContentLoaded', () => {
+      const g = window.gfxSettings;
+      document.getElementById('gfx-shadow').value = g.shadowQuality;
+      document.getElementById('gfx-distance').value = g.renderDistance;
+      document.getElementById('gfx-particles').value = g.particles;
+      document.getElementById('gfx-lights').value = g.streetLights;
+      document.getElementById('gfx-water').value = g.waterEffects;
+      
+      document.getElementById('igs-gfx-shadow').value = g.shadowQuality;
+      document.getElementById('igs-gfx-distance').value = g.renderDistance;
+      document.getElementById('igs-gfx-particles').value = g.particles;
+      document.getElementById('igs-gfx-lights').value = g.streetLights;
+      document.getElementById('igs-gfx-water').value = g.waterEffects;
+    });
+  </script>
   <script src="js/constants.js"></script>
   <script src="js/state.js"></script>
   <script src="js/utils.js"></script>
