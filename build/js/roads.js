@@ -92,29 +92,62 @@ function makeRoad(gx, gz) {
   const isStraightNS = (N || S) && !E && !W;
   const isStraightEW = (E || W) && !N && !S;
 
-  if (nLinks > 2) {
-    // Intersection — stop lines on each incoming road
+  if (nLinks === 4) {
     if (N) _addBox(g, 0, mY, -(half - sw - 0.15), 0.7, mH, 0.08, _roadMats.stopLine);
     if (S) _addBox(g, 0, mY, (half - sw - 0.15), 0.7, mH, 0.08, _roadMats.stopLine);
     if (E) _addBox(g, (half - sw - 0.15), mY, 0, 0.08, mH, 0.7, _roadMats.stopLine);
     if (W) _addBox(g, -(half - sw - 0.15), mY, 0, 0.08, mH, 0.7, _roadMats.stopLine);
+  } else if (nLinks === 3) {
+    if (N && S) {
+      [-1, -0.5, 0, 0.5, 1].forEach(z => _addBox(g, 0, mY, z, 0.07, mH, 0.3, _roadMats.marking));
+      if (E) {
+        [0.5, 1].forEach(x => _addBox(g, x, mY, 0, 0.3, mH, 0.07, _roadMats.marking));
+        _addBox(g, (half - sw - 0.15), mY, 0, 0.08, mH, 0.7, _roadMats.stopLine);
+      }
+      if (W) {
+        [-1, -0.5].forEach(x => _addBox(g, x, mY, 0, 0.3, mH, 0.07, _roadMats.marking));
+        _addBox(g, -(half - sw - 0.15), mY, 0, 0.08, mH, 0.7, _roadMats.stopLine);
+      }
+    } else {
+      [-1, -0.5, 0, 0.5, 1].forEach(x => _addBox(g, x, mY, 0, 0.3, mH, 0.07, _roadMats.marking));
+      if (N) {
+        [-1, -0.5].forEach(z => _addBox(g, 0, mY, z, 0.07, mH, 0.3, _roadMats.marking));
+        _addBox(g, 0, mY, -(half - sw - 0.15), 0.7, mH, 0.08, _roadMats.stopLine);
+      }
+      if (S) {
+        [0.5, 1].forEach(z => _addBox(g, 0, mY, z, 0.07, mH, 0.3, _roadMats.marking));
+        _addBox(g, 0, mY, (half - sw - 0.15), 0.7, mH, 0.08, _roadMats.stopLine);
+      }
+    }
+  } else if (nLinks === 1) {
+    if (N) [-1, -0.5].forEach(z => _addBox(g, 0, mY, z, 0.07, mH, 0.3, _roadMats.marking));
+    if (S) [0.5, 1].forEach(z => _addBox(g, 0, mY, z, 0.07, mH, 0.3, _roadMats.marking));
+    if (E) [0.5, 1].forEach(x => _addBox(g, x, mY, 0, 0.3, mH, 0.07, _roadMats.marking));
+    if (W) [-1, -0.5].forEach(x => _addBox(g, x, mY, 0, 0.3, mH, 0.07, _roadMats.marking));
   } else if (isStraightNS) {
-    // Dashed center line N-S
-    [-1, -0.5, 0, 0.5, 1].forEach(z => {
-      _addBox(g, 0, mY, z, 0.07, mH, 0.3, _roadMats.marking);
-    });
+    [-1, -0.5, 0, 0.5, 1].forEach(z => _addBox(g, 0, mY, z, 0.07, mH, 0.3, _roadMats.marking));
   } else if (isStraightEW || nLinks === 0) {
-    // Dashed center line E-W
-    [-1, -0.5, 0, 0.5, 1].forEach(x => {
-      _addBox(g, x, mY, 0, 0.3, mH, 0.07, _roadMats.marking);
-    });
+    [-1, -0.5, 0, 0.5, 1].forEach(x => _addBox(g, x, mY, 0, 0.3, mH, 0.07, _roadMats.marking));
   } else {
-    // Turning lane — short diagonal marking
-    const ang = (N && E) ? -Math.PI/4 : (N && W) ? Math.PI/4 : (S && E) ? Math.PI/4 : -Math.PI/4;
-    const mc = new THREE.Mesh(new THREE.BoxGeometry(0.07, mH, 0.7), _roadMats.marking);
-    mc.position.set((E ? 0.4 : -0.4), mY, (N ? -0.4 : 0.4));
-    mc.rotation.y = ang;
-    g.add(mc);
+    // Curved corner marking
+    const cx = E ? 1.25 : -1.25;
+    const cz = S ? 1.25 : -1.25;
+    let startAng = 0;
+    if (N && E) startAng = Math.PI;
+    else if (S && E) startAng = Math.PI/2;
+    else if (S && W) startAng = 0;
+    else if (N && W) startAng = 3*Math.PI/2;
+
+    for(let i=0; i<3; i++) {
+      const segAng = (Math.PI/2) * 0.2;
+      const spaceAng = (Math.PI/2) * 0.15;
+      const ang = startAng + spaceAng/1.5 + i * (segAng + spaceAng);
+      const geo = new THREE.RingGeometry(1.25 - 0.035, 1.25 + 0.035, 8, 1, ang, segAng);
+      const mesh = new THREE.Mesh(geo, _roadMats.marking);
+      mesh.position.set(cx, mY, cz);
+      mesh.rotation.x = -Math.PI/2;
+      g.add(mesh);
+    }
   }
 
   // ── Manhole cover ─────────────────────────────
