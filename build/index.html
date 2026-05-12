@@ -242,7 +242,6 @@
       <div class="settings-tabs">
         <button class="settings-tab active" onclick="switchSettingsTab(this, 'igs-tab-graphics')">Graphics</button>
         <button class="settings-tab" onclick="switchSettingsTab(this, 'igs-tab-audio')">Audio</button>
-        <button class="settings-tab" onclick="switchSettingsTab(this, 'igs-tab-gameplay')">Gameplay</button>
       </div>
 
       <!-- Graphics -->
@@ -275,19 +274,6 @@
         </div>
       </div>
 
-      <!-- Gameplay -->
-      <div id="igs-tab-gameplay" class="settings-panel hidden">
-        <div class="pause-audio" style="margin-top:10px; border-top:none; padding-top:0;">
-          <div class="settings-row">
-            <label class="settings-label">Day Speed</label>
-            <select class="settings-select" id="pause-day-speed" onchange="applyDaySpeed(this.value)">
-              <option value="1">Normal (1×)</option>
-              <option value="2">Fast (2×)</option>
-              <option value="0.5">Slow (0.5×)</option>
-            </select>
-          </div>
-        </div>
-      </div>
 
       <div class="pause-actions" style="margin-top:24px;">
         <button type="button" class="pm-btn pm-btn--primary" onclick="closeIngameSettings()">Close</button>
