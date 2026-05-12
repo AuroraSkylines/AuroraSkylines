@@ -123,7 +123,7 @@ function projectedDailyIncome() {
   let income = 0;
   Object.values(state.grid).forEach(c => { income += incomeForCell(c); });
   if (state.energy < 0) income = Math.floor(income * 0.6);
-  return income;
+  return Math.floor(income * happinessMultiplier());
 }
 
 // ── Animations ────────────────────────────────────

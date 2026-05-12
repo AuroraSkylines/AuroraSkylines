@@ -266,7 +266,7 @@ function updateIncomePreview() {
 function hudUpdate(pop=false){
   const gel=document.getElementById('val-gold');
   if(gel){
-    gel.textContent=fmtEuro(state.gold);
+    gel.textContent=fmtEuro(Math.floor(state.gold));
     if(pop){gel.classList.remove('pop');void gel.offsetWidth;gel.classList.add('pop');}
   }
   setVal('val-pop',state.pop,pop);

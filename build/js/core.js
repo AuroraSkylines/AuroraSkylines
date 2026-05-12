@@ -3,31 +3,52 @@
 // =====================================================
 'use strict';
 
+let _coinSpawnTimer = 0;
+let _lastFloorGold = -1;
+
 function tickDay(dt){
   state.dayTimer+=dt;
   updateDayBar();
   applySkyPhase(state.dayTimer / state.DAY_LEN);
 
+  // Calculate continuous daily income
+  let dailyIncome=0;
+  const earners=[];
+  Object.entries(state.grid).forEach(([k,cell])=>{
+    const inc = incomeForCell(cell);
+    dailyIncome += inc;
+    if(inc>0) earners.push(k);
+  });
+  if(state.energy<0) dailyIncome=Math.floor(dailyIncome*0.6);
+  dailyIncome = Math.floor(dailyIncome * happinessMultiplier());
+  
+  // Stream income
+  state.gold += (dailyIncome / state.DAY_LEN) * dt;
+
+  const currentFloorGold = Math.floor(state.gold);
+  if (currentFloorGold !== _lastFloorGold) {
+    _lastFloorGold = currentFloorGold;
+    hudUpdate(false);
+  }
+
+  // Throttled coin popping
+  _coinSpawnTimer -= dt;
+  if (_coinSpawnTimer <= 0 && earners.length > 0 && dailyIncome > 0) {
+    _coinSpawnTimer = 1.5 + Math.random() * 2.0;
+    const k = earners[Math.floor(Math.random() * earners.length)];
+    const [gx, gz] = k.split(',').map(Number);
+    const wp = worldPos(gx, gz);
+    spawnCoin(wp.x, wp.z);
+  }
+
   if(state.dayTimer<state.DAY_LEN)return;
+
+  // End of day
   state.dayTimer=0; state.day++;
   const dn = document.getElementById('day-num');
   if (dn) dn.textContent=state.day;
 
-  let income=0;
-  const earners=[];
-  Object.entries(state.grid).forEach(([k,cell])=>{
-    const inc = incomeForCell(cell);
-    income += inc;
-    if(inc>0) earners.push(k);
-  });
-  if(state.energy<0) income=Math.floor(income*0.6);
-  income = Math.floor(income * happinessMultiplier());
-  state.gold+=income;
-  earners.sort(()=>Math.random()-.5).slice(0,5).forEach(k=>{
-    const[gx,gz]=k.split(',').map(Number);
-    const wp=worldPos(gx,gz); spawnCoin(wp.x,wp.z);
-  });
-  hudUpdate(true);
+  hudUpdate(true); // Pop animation on day change
   updateIncomePreview();
   refreshUpgradeCards();
 
