@@ -404,9 +404,6 @@ function init(loadSave, bgMode = false){
     }
   }
 
-  if (typeof initMainMenuSettings === 'function') {
-    initMainMenuSettings();
-  }
 
   initBuildMenuTooltips();
   dismissLoadingScreen();

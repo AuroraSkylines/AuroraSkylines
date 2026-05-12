@@ -74,14 +74,12 @@ function playSound(type) {
  * Syncs both the pause-menu and settings-overlay sliders/toggles.
  */
 function initMainMenuSettings() {
-  if (window.__auroraAudioInit) return;
   const audio      = document.getElementById('bgMusic');
   const sliders    = ['music-vol-main', 'music-vol'];
   const labels     = ['vol-label-main', 'vol-label'];
   const toggleBtns = ['music-toggle-main', 'music-toggle'];
 
   if (!audio) return;
-  window.__auroraAudioInit = true;
 
   // Persist volume across sessions
   const savedVol   = localStorage.getItem('aurora-music-vol');
