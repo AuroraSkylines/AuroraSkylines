@@ -29,12 +29,33 @@
       }
     }
 
+    function showConfirm(title, body, onOk) {
+      const modal = document.getElementById('confirm-modal');
+      const t = document.querySelector('.confirm-title');
+      const b = document.getElementById('confirm-body');
+      const btnOk = document.getElementById('confirm-ok');
+      const btnCancel = document.getElementById('confirm-cancel');
+      if (!modal || !t || !b || !btnOk || !btnCancel) return;
+
+      t.textContent = title;
+      b.textContent = body;
+      modal.classList.remove('hidden');
+
+      const close = () => modal.classList.add('hidden');
+      btnCancel.onclick = close;
+      btnOk.onclick = () => { close(); if (onOk) onOk(); };
+    }
+
     function startGameNew() {
-      if (confirm("Start a new game? This will clear your current temporary session.")) {
-        try { localStorage.removeItem('aurora-skylines-save-v1'); } catch (e) {}
-        sessionStorage.removeItem('aurora-active-slot');
-        startGame(false);
-      }
+      showConfirm(
+        "Start fresh?",
+        "This will clear your current temporary session and start a brand new city. Ready?",
+        () => {
+          try { localStorage.removeItem('aurora-skylines-save-v1'); } catch (e) {}
+          sessionStorage.removeItem('aurora-active-slot');
+          startGame(false);
+        }
+      );
     }
 
     function openSaveManager() {
