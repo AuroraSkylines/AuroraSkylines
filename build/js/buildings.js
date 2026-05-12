@@ -320,45 +320,48 @@ const FACTORIES={
 };
 
 function getRoadFacingAngle(gx, gz) {
-  // Building fronts (door, windows) are at +Z in local space.
-  // To face a road, we rotate so that +Z points TOWARD the road tile.
-  //   Road at South (dz=+1): no rotation needed → 0
-  //   Road at North (dz=-1): 180° rotation       → Math.PI
-  //   Road at East  (dx=+1): -90° rotation       → -Math.PI/2
-  //   Road at West  (dx=-1): +90° rotation       → Math.PI/2
-  const sides = [
-    { dx: 0,  dz: 1,  angle: 0 },             // South road → face south
-    { dx: 0,  dz: -1, angle: Math.PI },        // North road → face north
-    { dx: 1,  dz: 0,  angle: -Math.PI / 2 },  // East road  → face east
-    { dx: -1, dz: 0,  angle: Math.PI / 2 },   // West road  → face west
-  ];
+  // Camera is at (28,28,28) → top-right isometric view.
+  // Building front (+Z local) appears pointing bottom-left on screen.
+  //
+  // To face road at South (+gz): rotate 180° so front faces +Z world = bottom-left screen
+  //   but road is at +gz which IS +Z → need front (+Z) to point toward +gz → angle 0
+  // To face road at North (-gz): need front to point -Z → angle PI
+  // To face road at East (+gx): need front to point +X → angle -PI/2
+  // To face road at West (-gx): need front to point -X → angle PI/2
+  //
+  // HOWEVER: the isometric camera means "facing the road" visually =
+  //   the building front should point AWAY from center of city toward road.
+  //   Since all buildings already face +Z by default (no rotation),
+  //   we just need correct rotation per road side.
 
-  const roadSides = sides.filter(s => state.grid[key(gx + s.dx, gz + s.dz)]?.type === 'road');
+  const N = state.grid[key(gx,   gz-1)]?.type === 'road';
+  const S = state.grid[key(gx,   gz+1)]?.type === 'road';
+  const E = state.grid[key(gx+1, gz  )]?.type === 'road';
+  const W = state.grid[key(gx-1, gz  )]?.type === 'road';
 
-  if (roadSides.length === 0) {
-    // No adjacent road — try to face toward any road within 2 tiles
-    for (const s of sides) {
-      if (state.grid[key(gx + s.dx * 2, gz + s.dz * 2)]?.type === 'road') return s.angle;
-    }
-    // Nothing nearby, stable seeded default
-    const fallback = Math.floor(seededRandom(gx, gz, 99) * 4);
-    return sides[fallback].angle;
+  const count = (N?1:0)+(S?1:0)+(E?1:0)+(W?1:0);
+
+  // Single road neighbor – always face it
+  if (count === 1) {
+    if (S) return 0;
+    if (N) return Math.PI;
+    if (E) return -Math.PI / 2;
+    if (W) return Math.PI / 2;
   }
 
-  if (roadSides.length === 1) {
-    // Exactly one road neighbor — always face it
-    return roadSides[0].angle;
-  }
+  // Multiple roads: prefer non-opposing road (corner/T building faces the unique side)
+  if (S && !N) return 0;
+  if (N && !S) return Math.PI;
+  if (E && !W) return -Math.PI / 2;
+  if (W && !E) return Math.PI / 2;
 
-  // Multiple road neighbors: prefer a road that is NOT also connected to the opposite side
-  // (i.e. avoid facing into a through-road — prefer a dead-end side)
-  for (const s of roadSides) {
-    const opposite = sides.find(o => o.dx === -s.dx && o.dz === -s.dz);
-    const hasOppositeRoad = opposite && state.grid[key(gx + opposite.dx, gz + opposite.dz)]?.type === 'road';
-    if (!hasOppositeRoad) return s.angle;
-  }
+  // No adjacent road: look 2 tiles out
+  if (state.grid[key(gx,   gz+2)]?.type === 'road') return 0;
+  if (state.grid[key(gx,   gz-2)]?.type === 'road') return Math.PI;
+  if (state.grid[key(gx+2, gz  )]?.type === 'road') return -Math.PI / 2;
+  if (state.grid[key(gx-2, gz  )]?.type === 'road') return Math.PI / 2;
 
-  // Surrounded on all checked sides, use stable seeded pick
-  return roadSides[Math.floor(seededRandom(gx, gz, 98) * roadSides.length)].angle;
+  // Stable seeded fallback — never random spin
+  return [0, Math.PI, -Math.PI/2, Math.PI/2][Math.floor(seededRandom(gx, gz, 99) * 4)];
 }
 
