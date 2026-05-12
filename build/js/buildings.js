@@ -320,13 +320,17 @@ const FACTORIES={
 };
 
 function getRoadFacingAngle(gx, gz) {
-  // Check each of the 4 sides: [dx, dz, facing angle]
-  // angle = direction the building FRONT points (toward the road)
+  // Building fronts (door, windows) are at +Z in local space.
+  // To face a road, we rotate so that +Z points TOWARD the road tile.
+  //   Road at South (dz=+1): no rotation needed → 0
+  //   Road at North (dz=-1): 180° rotation       → Math.PI
+  //   Road at East  (dx=+1): -90° rotation       → -Math.PI/2
+  //   Road at West  (dx=-1): +90° rotation       → Math.PI/2
   const sides = [
-    { dx: 0,  dz: 1,  angle: Math.PI },      // South road → face south
-    { dx: 0,  dz: -1, angle: 0 },             // North road → face north
-    { dx: 1,  dz: 0,  angle: Math.PI / 2 },   // East road  → face east
-    { dx: -1, dz: 0,  angle: -Math.PI / 2 },  // West road  → face west
+    { dx: 0,  dz: 1,  angle: 0 },             // South road → face south
+    { dx: 0,  dz: -1, angle: Math.PI },        // North road → face north
+    { dx: 1,  dz: 0,  angle: -Math.PI / 2 },  // East road  → face east
+    { dx: -1, dz: 0,  angle: Math.PI / 2 },   // West road  → face west
   ];
 
   const roadSides = sides.filter(s => state.grid[key(gx + s.dx, gz + s.dz)]?.type === 'road');
@@ -347,14 +351,14 @@ function getRoadFacingAngle(gx, gz) {
   }
 
   // Multiple road neighbors: prefer a road that is NOT also connected to the opposite side
-  // (i.e. avoid facing into an intersection — prefer a dead-end sidewalk side)
+  // (i.e. avoid facing into a through-road — prefer a dead-end side)
   for (const s of roadSides) {
     const opposite = sides.find(o => o.dx === -s.dx && o.dz === -s.dz);
     const hasOppositeRoad = opposite && state.grid[key(gx + opposite.dx, gz + opposite.dz)]?.type === 'road';
-    if (!hasOppositeRoad) return s.angle; // Single-sided road, great choice
+    if (!hasOppositeRoad) return s.angle;
   }
 
-  // All sides have roads (full intersection neighbor), use seeded pick for consistency
+  // Surrounded on all checked sides, use stable seeded pick
   return roadSides[Math.floor(seededRandom(gx, gz, 98) * roadSides.length)].angle;
 }
 
