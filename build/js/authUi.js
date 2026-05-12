@@ -77,6 +77,54 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (typeof window.init === 'function') {
         window.init(false, true); 
       }
+
+      // ── Wire up Settings audio controls for the start menu ──
+      const audio = document.getElementById('bgMusic');
+      if (audio) {
+        const savedVol = parseInt(localStorage.getItem('aurora-music-vol') || '25', 10);
+        audio.volume = Math.pow(savedVol / 100, 2);
+        audio.play().catch(() => {
+          const resume = () => { audio.play().catch(() => {}); document.removeEventListener('click', resume); };
+          document.addEventListener('click', resume);
+        });
+
+        const allSliderIds = ['music-vol-main', 'music-vol'];
+        const allLabelIds  = ['vol-label-main', 'vol-label'];
+        const allToggleIds = ['music-toggle-main', 'music-toggle'];
+
+        function setVolAll(pct) {
+          pct = Math.max(0, Math.min(100, parseInt(pct, 10) || 0));
+          audio.volume = Math.pow(pct / 100, 2);
+          localStorage.setItem('aurora-music-vol', pct);
+          allSliderIds.forEach(id => { const s = document.getElementById(id); if (s) s.value = pct; });
+          allLabelIds.forEach(id  => { const l = document.getElementById(id); if (l) l.textContent = pct + '%'; });
+        }
+        setVolAll(savedVol);
+
+        allSliderIds.forEach(id => {
+          const s = document.getElementById(id);
+          if (s) {
+            s.addEventListener('input',  () => setVolAll(s.value));
+            s.addEventListener('change', () => setVolAll(s.value));
+          }
+        });
+
+        allToggleIds.forEach(id => {
+          const btn = document.getElementById(id);
+          if (btn) {
+            btn.addEventListener('click', e => {
+              e.stopPropagation();
+              if (audio.paused) {
+                audio.play().catch(() => {});
+                allToggleIds.forEach(bid => { const b = document.getElementById(bid); if (b) { b.textContent = 'Pause'; b.classList.remove('paused'); }});
+              } else {
+                audio.pause();
+                allToggleIds.forEach(bid => { const b = document.getElementById(bid); if (b) { b.textContent = 'Play'; b.classList.add('paused'); }});
+              }
+            });
+          }
+        });
+      }
     } catch (e) {
       console.error("Post-auth error:", e);
       location.reload(); 
