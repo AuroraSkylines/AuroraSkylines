@@ -258,9 +258,11 @@ function updateDayBar() {
 }
 
 function updateIncomePreview() {
-  const el = document.getElementById('val-income');
-  if (!el) return;
-  el.textContent = fmtEuroSigned(projectedDailyIncome());
+  const pill = document.getElementById('money-pill');
+  if (!pill) return;
+  const daily = projectedDailyIncome();
+  const hourly = Math.floor(daily / 24);
+  pill.title = `Income: ${fmtEuroSigned(hourly)}/h`;
 }
 
 function hudUpdate(pop=false){

@@ -36,85 +36,16 @@ html, body {
   cursor: grab;
 }
 
-/* ── BUDGET DIAMOND (top left) ─────────────── */
-#budget-anchor {
-  position: fixed;
-  top: 16px;
-  left: 16px;
-  z-index: 21;
-  pointer-events: none;
-  width: 118px;
-  height: 118px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.budget-diamond {
-  width: 104px;
-  height: 104px;
-  transform: rotate(45deg);
-  border-radius: 18px;
-  background: linear-gradient(145deg, rgba(56,189,248,0.35), rgba(168,85,247,0.4), rgba(15,23,42,0.92));
-  border: 2px solid rgba(255,255,255,0.22);
-  box-shadow:
-    0 0 48px rgba(56,189,248,0.35),
-    0 0 1px rgba(255,255,255,0.5) inset,
-    0 12px 40px rgba(0,0,0,0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-}
-.budget-diamond__shine {
-  position: absolute;
-  inset: -40%;
-  background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.12) 48%, transparent 60%);
-  transform: rotate(-45deg);
-  pointer-events: none;
-  animation: diamond-shine 5s ease-in-out infinite;
-}
-@keyframes diamond-shine {
-  0%, 100% { opacity: 0.4; transform: rotate(-45deg) translateX(-12%); }
-  50% { opacity: 0.9; transform: rotate(-45deg) translateX(12%); }
-}
-.budget-inner {
-  transform: rotate(-45deg);
-  text-align: center;
-  padding: 4px;
-  max-width: 86px;
-}
-.budget-label {
-  display: block;
-  font-family: var(--fu);
-  font-size: 8px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.55);
-  margin-bottom: 4px;
-}
-.budget-amount {
-  font-family: var(--fd);
-  font-weight: 900;
-  font-size: 15px;
-  line-height: 1.15;
-  color: #fef3c7;
-  text-shadow: 0 0 20px rgba(251,191,36,0.45);
-  font-variant-numeric: tabular-nums;
-}
 
-/* ── TOP BAR (stats right) ───────────────── */
+
+/* ── TOP BAR (stats center) ───────────────── */
 #top-bar {
   position: fixed;
-  top: 8px;
-  left: 8px;
-  right: 64px;
+  top: 16px;
+  left: 0;
+  right: 0;
   display: flex;
-  flex-wrap: nowrap;
-  align-items: flex-start;
-  justify-content: flex-end;
-  gap: 8px;
+  justify-content: center;
   z-index: 20;
   pointer-events: none;
 }
@@ -183,12 +114,9 @@ html, body {
 
 #hud-stats {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   align-items: center;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  pointer-events: none;
-  max-width: min(520px, 92vw);
+  pointer-events: auto;
 }
 
 .res-pill {
