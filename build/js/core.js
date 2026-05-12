@@ -163,16 +163,29 @@ function spawnMeshOnly(gx, gz, type) {
 }
 
 function seedStartingCity() {
+  // Hard reset global state to defaults
   state.gold = 2000;
+  state.pop = 0;
+  state.energy = 0;
+  state.happiness = 75;
   state.day = 1;
   state.dayTimer = 0;
   state.selected = 'road';
-  camTarget.set(0, 0, 0);
-  zoomLevel = 1;
-  applyZoom();
-  UPGRADE_DEFS.forEach(u => { state.upgradeLevels[u.id] = 0; });
   state.grid = {};
+  state.upgradeLevels = {};
+  UPGRADE_DEFS.forEach(u => { state.upgradeLevels[u.id] = 0; });
+  
+  // Reset camera
+  if (window.camTarget) camTarget.set(0, 0, 0);
+  if (typeof applyZoom === 'function') {
+    zoomLevel = 1;
+    applyZoom();
+  }
+  
+  // Clear scene
   clearCarsAndMeshes();
+
+  // Create initial road
   const center = Math.floor(GRID / 2), roadStart = GRID - 1;
   for (let z = roadStart; z >= center; z--) state.grid[key(center, z)] = { type: 'road' };
   for (let z = roadStart; z >= center; z--) {
