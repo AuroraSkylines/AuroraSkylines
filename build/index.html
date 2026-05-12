@@ -32,37 +32,66 @@
 
         _audio = document.getElementById('bgMusic');
         if (_audio) {
-          _audio.volume = 0.34;
-          _audio.play().catch(function () {});
-        }
-
-        var slider = document.getElementById('music-vol');
-        var label = document.getElementById('vol-label');
-        if (slider && label && _audio) {
-          function setVol() {
-            var pct = parseInt(slider.value, 10) || 0;
-            _audio.volume = Math.pow(pct / 100, 2);
-            label.textContent = pct + '%';
-          }
-          slider.addEventListener('input', setVol);
-          slider.addEventListener('change', setVol);
-        }
-
-        var toggleBtn = document.getElementById('music-toggle');
-        if (toggleBtn && _audio) {
-          toggleBtn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            if (_audio.paused) {
-              _audio.play();
-              toggleBtn.textContent = 'Pause';
-              toggleBtn.classList.remove('paused');
-            } else {
-              _audio.pause();
-              toggleBtn.textContent = 'Play';
-              toggleBtn.classList.add('paused');
-            }
+          var savedVol = parseInt(localStorage.getItem('aurora-music-vol') || '25', 10);
+          _audio.volume = Math.pow(savedVol / 100, 2);
+          _audio.play().catch(function () {
+            // Browser blocked autoplay - play on first click
+            var resume = function() {
+              _audio.play().catch(function(){});
+              document.removeEventListener('click', resume);
+            };
+            document.addEventListener('click', resume);
           });
         }
+
+        // Wire ALL volume sliders (both settings overlay and pause menu)
+        var allSliders = ['music-vol-main', 'music-vol'];
+        var allLabels  = ['vol-label-main', 'vol-label'];
+        function setVolAll(pct) {
+          pct = parseInt(pct, 10) || 0;
+          if (_audio) _audio.volume = Math.pow(pct / 100, 2);
+          localStorage.setItem('aurora-music-vol', pct);
+          allSliders.forEach(function(id) {
+            var s = document.getElementById(id); if (s) s.value = pct;
+          });
+          allLabels.forEach(function(id) {
+            var l = document.getElementById(id); if (l) l.textContent = pct + '%';
+          });
+        }
+        // Set initial value from storage
+        setVolAll(parseInt(localStorage.getItem('aurora-music-vol') || '25', 10));
+
+        allSliders.forEach(function(id) {
+          var s = document.getElementById(id);
+          if (s) {
+            s.addEventListener('input',  function() { setVolAll(s.value); });
+            s.addEventListener('change', function() { setVolAll(s.value); });
+          }
+        });
+
+        // Wire ALL toggle buttons
+        var allToggles = ['music-toggle-main', 'music-toggle'];
+        allToggles.forEach(function(id) {
+          var btn = document.getElementById(id);
+          if (btn && _audio) {
+            btn.addEventListener('click', function(e) {
+              e.stopPropagation();
+              if (_audio.paused) {
+                _audio.play().catch(function(){});
+                allToggles.forEach(function(bid) {
+                  var b = document.getElementById(bid);
+                  if (b) { b.textContent = 'Pause'; b.classList.remove('paused'); }
+                });
+              } else {
+                _audio.pause();
+                allToggles.forEach(function(bid) {
+                  var b = document.getElementById(bid);
+                  if (b) { b.textContent = 'Play'; b.classList.add('paused'); }
+                });
+              }
+            });
+          }
+        });
 
         init(loadSave);
       } catch (err) {
