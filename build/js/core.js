@@ -52,24 +52,33 @@ function tickDay(dt){
   updateIncomePreview();
   refreshUpgradeCards();
 
-  if (state.day >= state.nextEventDay) {
-    state.nextEventDay = state.day + 5 + Math.floor(Math.random() * 5);
+  // Random Events (Real-time based, every 4 to 8 minutes)
+  if (state.eventTimer === undefined) {
+    state.eventTimer = 0;
+    state.nextEventTime = 240 + Math.random() * 240;
+  }
+  state.eventTimer += dt;
+
+  if (state.eventTimer >= state.nextEventTime) {
+    state.eventTimer = 0;
+    state.nextEventTime = 240 + Math.random() * 240; // 4 to 8 minutes
+    
     const events = [
       { msg: '🎉 City Festival! Parks thriving.', gold: 0, type: 'ok', condition: () => Object.values(state.grid).some(c => c.type==='park') },
-      { msg: '💰 Tax Windfall! Budget surges.', gold: Math.max(2880, Math.floor(state.pop * 192)), type: 'ok' },
-      { msg: '⚡ Power Surge! Grid overloaded.', gold: -1920, type: 'error', condition: () => state.energy > 0 },
-      { msg: '🏗️ Construction Boom! Builders arrive.', gold: 4800, type: 'ok', condition: () => state.pop > 10 },
-      { msg: '🌧️ Storm damage. Repairs needed.', gold: -Math.floor(1200 + Math.random() * 2400), type: 'error' },
-      { msg: '🤝 Trade Deal! Commerce booms.', gold: Math.max(1920, Math.floor(Object.values(state.grid).filter(c=>c.type==='shop').length * 720)), type: 'ok' },
-      { msg: '🔥 Factory Fire! Insurers pay out.', gold: -3600, type: 'error', condition: () => Object.values(state.grid).some(c=>c.type==='factory') },
-      { msg: '🎓 Tech Grant! City gets smarter.', gold: 7200, type: 'ok', condition: () => state.day > 15 },
+      { msg: '💰 Tax Windfall! Budget surges.', gold: Math.max(150, Math.floor(state.pop * 1.5)), type: 'ok' },
+      { msg: '⚡ Power Surge! Grid overloaded.', gold: -Math.max(100, Math.floor(state.pop * 1.0)), type: 'error', condition: () => state.energy > 0 },
+      { msg: '🌪️ Bad Weather! Commerce slows.', gold: -Math.max(80, Math.floor(state.pop * 0.8)), type: 'error' },
+      { msg: '📈 Market Boom! Shops rake it in.', gold: Math.max(200, Math.floor(state.pop * 2.0)), type: 'ok', condition: () => Object.values(state.grid).some(c => c.type==='shop') }
     ];
-    const valid = events.filter(e => !e.condition || e.condition());
-    const ev = valid[Math.floor(Math.random() * valid.length)];
-    if (ev) {
-      state.gold += ev.gold;
-      if (ev.gold !== 0) hudUpdate(true);
-      toastEvent(ev.msg, ev.gold, ev.type);
+    const possible = events.filter(e => !e.condition || e.condition());
+    if (possible.length > 0) {
+      const ev = possible[Math.floor(Math.random() * possible.length)];
+      if (ev) {
+        state.gold += ev.gold;
+        if (state.gold < 0) state.gold = 0;
+        if (ev.gold !== 0) hudUpdate(true);
+        toastEvent(ev.msg, ev.gold, ev.type);
+      }
     }
   }
 }
