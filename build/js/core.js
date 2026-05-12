@@ -302,11 +302,19 @@ function init(loadSave, bgMode = false){
   window.__auroraBootMode = bgMode ? 'bg' : 'game';
   isBackgroundMode = bgMode;
 
-  // If we were in background mode and are now starting for real, just restore UI
+  // If we were in background mode and are now starting for real
   if (wasInBgMode && !bgMode) {
     document.body.classList.remove('is-background-mode');
     gamePaused = false;
     closePauseMenu();
+    
+    // CRITICAL: If starting fresh (no loadSave), we MUST reset the city state
+    if (!loadSave) {
+      seedStartingCity();
+    } else {
+      loadGameFromStorage();
+    }
+    
     recalc();
     hudUpdate();
     return;
