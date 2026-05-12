@@ -25,33 +25,58 @@ function _addBox(g, x, y, z, w, h, d, mat) {
 }
 
 function _addLampPost(g, x, z, rotY) {
-  // Pole
+  const arm_reach = 0.45;
+  const arm_dx = Math.sin(rotY) * arm_reach;
+  const arm_dz = Math.cos(rotY) * arm_reach;
+
+  // ── Pole (slender, tapered) ──
   const pole = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.04, 0.055, 1.4, 5),
+    new THREE.CylinderGeometry(0.025, 0.045, 1.6, 6),
     _roadMats.lampPole
   );
-  pole.position.set(x, 0.82, z);
+  pole.position.set(x, 0.92, z);
   pole.castShadow = true;
   g.add(pole);
 
-  // Arm
-  const arm = new THREE.Mesh(
-    new THREE.BoxGeometry(0.32, 0.05, 0.05),
+  // ── Curved neck (angled box connector) ──
+  const neck = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.022, 0.022, arm_reach, 5),
     _roadMats.lampPole
   );
-  arm.position.set(x + Math.sin(rotY) * 0.16, 1.52, z + Math.cos(rotY) * 0.16);
-  arm.rotation.y = rotY;
-  g.add(arm);
+  neck.position.set(x + arm_dx * 0.5, 1.74, z + arm_dz * 0.5);
+  neck.rotation.z = Math.PI / 2;
+  neck.rotation.y = rotY;
+  g.add(neck);
 
-  // Lamp head (emissive, flagged for night glow)
-  const lampMat = _roadMats.lampHead.clone();
-  const head = new THREE.Mesh(
-    new THREE.SphereGeometry(0.1, 5, 4),
+  // ── Lamp housing (flat disc lantern) ──
+  const housingTop = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.13, 0.13, 0.04, 8),
+    _roadMats.lampPole
+  );
+  housingTop.position.set(x + arm_dx, 1.73, z + arm_dz);
+  g.add(housingTop);
+
+  // ── Lens (glowing emissive panel, small and flat) ──
+  const lampMat = new THREE.MeshStandardMaterial({
+    color: 0xfff0c0,
+    emissive: 0xffcc66,
+    emissiveIntensity: 0.0,   // controlled by renderer.js at night
+    roughness: 0.3,
+    metalness: 0.1
+  });
+  const lens = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.10, 0.10, 0.03, 8),
     lampMat
   );
-  head.position.set(x + Math.sin(rotY) * 0.32, 1.5, z + Math.cos(rotY) * 0.32);
-  head.userData.isLamp = true;
-  g.add(head);
+  lens.position.set(x + arm_dx, 1.70, z + arm_dz);
+  lens.userData.isLamp = true;
+  g.add(lens);
+
+  // ── Real point light – illuminates the ground below ──
+  const ptLight = new THREE.PointLight(0xffcc66, 0, 3.5, 2);
+  ptLight.position.set(x + arm_dx, 1.65, z + arm_dz);
+  ptLight.userData.isLampLight = true;   // renderer will toggle intensity
+  g.add(ptLight);
 }
 
 function makeRoad(gx, gz) {
@@ -176,12 +201,12 @@ function makeRoad(gx, gz) {
     g.add(mh);
   }
 
-  // ── Street lamp posts on dead-end / edge sides ─
+  // ── Street lamp posts – one per open edge, sparse ─
   if (window.gfxSettings?.streetLights !== 'off') {
-    if (!N && seededRandom(gx, gz, 50) > 0.4) _addLampPost(g, -0.6, -(half - 0.18), 0);
-    if (!S && seededRandom(gx, gz, 51) > 0.4) _addLampPost(g,  0.6,  (half - 0.18), Math.PI);
-    if (!W && seededRandom(gx, gz, 52) > 0.4) _addLampPost(g, -(half - 0.18), -0.6, -Math.PI/2);
-    if (!E && seededRandom(gx, gz, 53) > 0.4) _addLampPost(g,  (half - 0.18),  0.6, Math.PI/2);
+    if (!N && seededRandom(gx, gz, 50) > 0.72) _addLampPost(g, -0.55, -(half - 0.22), 0);
+    if (!S && seededRandom(gx, gz, 51) > 0.72) _addLampPost(g,  0.55,  (half - 0.22), Math.PI);
+    if (!W && seededRandom(gx, gz, 52) > 0.72) _addLampPost(g, -(half - 0.22), -0.55, -Math.PI/2);
+    if (!E && seededRandom(gx, gz, 53) > 0.72) _addLampPost(g,  (half - 0.22),  0.55, Math.PI/2);
   }
 
   return g;

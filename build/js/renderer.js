@@ -87,12 +87,16 @@ function updateWindowGlow(phase) {
   const winIntensity   = Math.max(0, 0.9 - phase * 1.8);
   const lampIntensity  = Math.max(0, 1.0 - phase * 2.0);
   scene.traverse(obj => {
-    if (!obj.isMesh) return;
-    if (obj.userData.isWindow) {
+    if (!obj.isMesh && !obj.isLight) return;
+    if (obj.isMesh && obj.userData.isWindow) {
       obj.material.emissiveIntensity = winIntensity * (obj.userData.winRnd || 1.0);
     }
-    if (obj.userData.isLamp) {
-      obj.material.emissiveIntensity = lampIntensity;
+    if (obj.isMesh && obj.userData.isLamp) {
+      obj.material.emissiveIntensity = lampIntensity * 2.5;
+    }
+    // Drive the real PointLight for each lamp post
+    if (obj.isLight && obj.userData.isLampLight) {
+      obj.intensity = lampIntensity * 1.8;
     }
   });
 }
