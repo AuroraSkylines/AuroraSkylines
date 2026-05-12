@@ -94,8 +94,8 @@ const db = {
   // Admin: Fetch all invite keys
   async fetchKeys() {
     if (!this.session) throw new Error('Not logged in');
-    // Relies on RLS policy allowing admins to view
-    const { data, error } = await sb.from('invite_keys').select('*').order('created_at', { ascending: false });
+    // Call the SECURITY DEFINER RPC to bypass RLS auth.users select restrictions
+    const { data, error } = await sb.rpc('get_all_invite_keys');
     if (error) throw new Error(error.message);
     return data;
   },

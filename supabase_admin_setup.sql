@@ -98,3 +98,24 @@ INSERT INTO public.invite_keys (key) VALUES
   ('COZY-TOWN-0004'),
   ('AURORA-TEST-0005')
 ON CONFLICT (key) DO NOTHING;
+
+-- 5. RPC: Get All Invite Keys (Admin only)
+CREATE OR REPLACE FUNCTION public.get_all_invite_keys()
+RETURNS TABLE(id uuid, key text, used boolean, used_by_user_id uuid, created_at timestamp with time zone)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  caller_username text;
+BEGIN
+  -- Verify caller is admin
+  SELECT raw_user_meta_data->>'username' INTO caller_username
+  FROM auth.users WHERE auth.users.id = auth.uid();
+  
+  IF caller_username != 'admin' THEN
+    RAISE EXCEPTION 'Unauthorized: Only admins can view keys.';
+  END IF;
+
+  RETURN QUERY SELECT * FROM public.invite_keys ORDER BY invite_keys.created_at DESC;
+END;
+$$;
