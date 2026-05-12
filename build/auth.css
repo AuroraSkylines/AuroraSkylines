@@ -84,3 +84,4 @@
   text-align: center; color: var(--mint); font-family: var(--fu); font-size: 14px;
   font-weight: 600; padding: 20px 0;
 }
+.auth-loading.hidden { display: none; }
