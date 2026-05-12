@@ -76,6 +76,23 @@ const db = {
     location.reload();
   },
 
+  // Admin: Generate new invite key
+  async generateKey(prefix = 'ALPHA-') {
+    if (!this.session) throw new Error('Not logged in');
+    const { data, error } = await sb.rpc('generate_invite_key', { prefix });
+    if (error) throw new Error(error.message);
+    return data; // Returns the generated key string
+  },
+
+  // Admin: Fetch all invite keys
+  async fetchKeys() {
+    if (!this.session) throw new Error('Not logged in');
+    // Relies on RLS policy allowing admins to view
+    const { data, error } = await sb.from('invite_keys').select('*').order('created_at', { ascending: false });
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
   async changePassword(newPassword) {
     if (!this.session) throw new Error('Not logged in');
     const { data, error } = await sb.auth.updateUser({ password: newPassword });

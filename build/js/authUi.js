@@ -180,9 +180,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.openAccountManager = () => {
     const overlay = document.getElementById('account-overlay');
     const nameEl = document.getElementById('account-username');
+    const adminBtn = document.getElementById('btn-open-admin');
+    
     if (overlay && window.db && window.db.session) {
       const username = window.db.session.user.user_metadata.username || 'User';
       nameEl.textContent = `Logged in as: ${username}`;
+      
+      // Show Admin button if the user is 'admin' (or modify this check as needed)
+      if (username.toLowerCase() === 'admin' && adminBtn) {
+        adminBtn.classList.remove('hidden');
+      } else if (adminBtn) {
+        adminBtn.classList.add('hidden');
+      }
+
       overlay.classList.remove('hidden');
       overlay.setAttribute('aria-hidden', 'false');
     }
@@ -226,6 +236,81 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (e) {
       console.error('Logout error:', e);
     }
+  });
+
+  // ── Admin Key Manager Logic ──
+  window.openAdminManager = async () => {
+    document.getElementById('account-overlay').classList.add('hidden');
+    const adminOverlay = document.getElementById('admin-overlay');
+    if (adminOverlay) {
+      adminOverlay.classList.remove('hidden');
+      adminOverlay.setAttribute('aria-hidden', 'false');
+      await refreshAdminKeys();
+    }
+  };
+
+  window.closeAdminManager = () => {
+    const adminOverlay = document.getElementById('admin-overlay');
+    if (adminOverlay) {
+      adminOverlay.classList.add('hidden');
+      adminOverlay.setAttribute('aria-hidden', 'true');
+      document.getElementById('account-overlay').classList.remove('hidden'); // Back to account
+    }
+  };
+
+  async function refreshAdminKeys() {
+    const list = document.getElementById('admin-keys-list');
+    list.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.3);font-family:var(--fu);font-size:12px;padding:20px;">Loading keys...</div>';
+    try {
+      const keys = await window.db.fetchKeys();
+      if (!keys || keys.length === 0) {
+        list.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.3);font-family:var(--fu);font-size:12px;padding:20px;">No keys found. Generate one above!</div>';
+        return;
+      }
+      
+      list.innerHTML = '';
+      keys.forEach(k => {
+        const item = document.createElement('div');
+        item.style.cssText = 'background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 10px 14px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-family: var(--fu); font-size: 13px;';
+        
+        const keyText = document.createElement('span');
+        keyText.style.cssText = 'font-family: monospace; font-weight: bold; color: #fff; letter-spacing: 1px;';
+        keyText.textContent = k.key;
+        
+        const statusBadge = document.createElement('span');
+        if (k.used) {
+          statusBadge.textContent = 'USED';
+          statusBadge.style.cssText = 'font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(251,113,133,0.15); color: #fecdd3; border: 1px solid rgba(251,113,133,0.25);';
+        } else {
+          statusBadge.textContent = 'AVAILABLE';
+          statusBadge.style.cssText = 'font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(46,230,166,0.15); color: var(--mint); border: 1px solid rgba(46,230,166,0.25);';
+        }
+        
+        item.appendChild(keyText);
+        item.appendChild(statusBadge);
+        list.appendChild(item);
+      });
+    } catch (e) {
+      list.innerHTML = `<div style="text-align:center;color:var(--rose);font-family:var(--fu);font-size:12px;padding:20px;">Error: ${e.message}</div>`;
+    }
+  }
+
+  document.getElementById('btn-generate-key')?.addEventListener('click', async () => {
+    const prefixInput = document.getElementById('admin-key-prefix').value.trim();
+    const msgEl = document.getElementById('admin-msg');
+    showError(msgEl, '');
+    
+    const oldText = document.getElementById('btn-generate-key').textContent;
+    document.getElementById('btn-generate-key').textContent = '...';
+    try {
+      const prefix = prefixInput || 'ALPHA-';
+      await window.db.generateKey(prefix);
+      document.getElementById('admin-key-prefix').value = '';
+      await refreshAdminKeys();
+    } catch (e) {
+      showError(msgEl, e.message);
+    }
+    document.getElementById('btn-generate-key').textContent = oldText;
   });
 
 });

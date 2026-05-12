@@ -136,8 +136,31 @@
       </div>
 
       <div class="pause-actions" style="margin-top:24px;">
+        <button type="button" class="pm-btn pm-btn--settings hidden" id="btn-open-admin" onclick="openAdminManager()" style="margin-bottom: 8px;">🔑 Manage Alpha Keys</button>
         <button type="button" class="pm-btn" onclick="closeAccountManager()">Close</button>
         <button type="button" class="pm-btn pm-btn--danger" id="btn-logout">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ADMIN KEY MANAGER OVERLAY ──────────── -->
+  <div id="admin-overlay" aria-hidden="true" class="modal-overlay hidden">
+    <div class="pause-card" style="width: min(440px, 100%); margin: auto; max-height: 80vh; display: flex; flex-direction: column;">
+      <h2 class="pause-title">Alpha Keys</h2>
+      <p class="pause-hint" style="margin-top: -2px; margin-bottom: 16px;">Admin Key Manager</p>
+      
+      <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+        <input type="text" id="admin-key-prefix" placeholder="Prefix (e.g. ALPHA-)" class="auth-input" style="flex: 1; padding: 10px; border-radius: 10px;">
+        <button id="btn-generate-key" class="pm-btn pm-btn--primary" style="padding: 10px 16px; font-size: 13px;">Generate</button>
+      </div>
+      <div id="admin-msg" class="auth-error hidden" style="margin-bottom: 12px;"></div>
+
+      <div id="admin-keys-list" style="flex: 1; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; border: 1px solid rgba(255,255,255,0.05); min-height: 150px;">
+        <div style="text-align: center; color: rgba(255,255,255,0.3); font-family: var(--fu); font-size: 12px; padding: 20px;">Loading keys...</div>
+      </div>
+
+      <div class="pause-actions" style="margin-top:20px;">
+        <button type="button" class="pm-btn" onclick="closeAdminManager()">Back</button>
       </div>
     </div>
   </div>
