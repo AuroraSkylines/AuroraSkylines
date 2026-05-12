@@ -84,7 +84,7 @@ function buildSavePayload() {
   };
 }
 
-async function saveToSlot(id, force = false) {
+async function _saveToSlot(id, force = false) {
   const payload = buildSavePayload();
   let syncResult = { success: true };
 
@@ -146,18 +146,18 @@ async function deleteSlot(id) {
 setInterval(() => {
   const activeSlot = sessionStorage.getItem('aurora-active-slot');
   if (!isBackgroundMode && window.db && window.db.session && activeSlot && !gamePaused) {
-    saveToSlot(parseInt(activeSlot, 10), false); // Autosave is NOT forced
+    _saveToSlot(parseInt(activeSlot, 10), false); // Autosave is NOT forced
   }
 }, 60000);
 
 // Export to window
 window.renderSaveManager = renderSaveManager;
-window.saveToSlot = (id) => saveToSlot(id, true); // Manual clicks are forced
+window.saveToSlot = (id) => _saveToSlot(id, true); // Manual clicks are forced
 window.loadFromSlot = loadFromSlot;
 window.deleteSlot = deleteSlot;
 window.buildSavePayload = buildSavePayload;
 window.saveToCloud = () => {
     const activeSlot = sessionStorage.getItem('aurora-active-slot');
-    if (activeSlot) saveToSlot(parseInt(activeSlot, 10), true);
+    if (activeSlot) _saveToSlot(parseInt(activeSlot, 10), true);
     else openSaveManager();
 };
