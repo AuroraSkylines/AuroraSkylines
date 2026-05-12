@@ -114,10 +114,33 @@
     <div class="menu-game-title">Aurora Skylines</div>
     <div class="menu-tagline">City builder</div>
     
+    <div id="account-btn" class="account-btn" onclick="openAccountManager()">👤 Account</div>
+
     <div class="menu-actions">
       <button type="button" class="menu-btn menu-btn--primary" id="btn-load" onclick="openSaveManager()">Load Game</button>
       <button type="button" class="menu-btn menu-btn--ghost" id="btn-new" onclick="startGameNew()">New Game</button>
       <button type="button" class="menu-btn menu-btn--ghost" id="btn-settings" onclick="document.getElementById('settings-overlay').classList.add('is-visible')">Settings</button>
+    </div>
+  </div>
+
+  <!-- ── ACCOUNT MANAGER OVERLAY ──────────── -->
+  <div id="account-overlay" aria-hidden="true" class="modal-overlay hidden">
+    <div class="auth-card">
+      <div class="auth-header">
+        <h2>Account Manager</h2>
+        <p class="auth-subtitle" id="account-username">Logged in as: ...</p>
+      </div>
+      
+      <div class="auth-form active" style="margin-top: 1rem;">
+        <input type="password" id="account-new-password" placeholder="New Password" class="auth-input">
+        <button id="btn-change-password" class="auth-btn">Change Password</button>
+        <div id="account-msg" class="auth-error hidden" style="margin-top: 10px;"></div>
+      </div>
+
+      <div class="pause-actions" style="margin-top:20px;">
+        <button type="button" class="pm-btn pm-btn--primary" onclick="closeAccountManager()">Close</button>
+        <button type="button" class="pm-btn pm-btn--danger" id="btn-logout">Log Out</button>
+      </div>
     </div>
   </div>
 

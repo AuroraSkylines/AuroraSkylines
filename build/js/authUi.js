@@ -175,4 +175,57 @@ document.addEventListener('DOMContentLoaded', async () => {
     showLoading(false);
     showError(errLogin, "System Error: " + err.message);
   }
+
+  // ── Account Manager Logic ──
+  window.openAccountManager = () => {
+    const overlay = document.getElementById('account-overlay');
+    const nameEl = document.getElementById('account-username');
+    if (overlay && window.db && window.db.session) {
+      const username = window.db.session.user.user_metadata.username || 'User';
+      nameEl.textContent = `Logged in as: ${username}`;
+      overlay.classList.remove('hidden');
+      overlay.setAttribute('aria-hidden', 'false');
+    }
+  };
+
+  window.closeAccountManager = () => {
+    const overlay = document.getElementById('account-overlay');
+    if (overlay) {
+      overlay.classList.add('hidden');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.getElementById('account-new-password').value = '';
+      showError(document.getElementById('account-msg'), '');
+    }
+  };
+
+  document.getElementById('btn-change-password').addEventListener('click', async () => {
+    const newPass = document.getElementById('account-new-password').value;
+    const msgEl = document.getElementById('account-msg');
+    if (!newPass || newPass.length < 6) {
+      showError(msgEl, 'Password must be at least 6 characters.');
+      return;
+    }
+    
+    try {
+      await window.db.changePassword(newPass);
+      showError(msgEl, 'Password updated successfully!');
+      msgEl.style.color = '#10b981'; // Green success color
+      setTimeout(() => {
+        msgEl.style.color = ''; // Reset
+        window.closeAccountManager();
+      }, 2000);
+    } catch (e) {
+      msgEl.style.color = '';
+      showError(msgEl, e.message);
+    }
+  });
+
+  document.getElementById('btn-logout').addEventListener('click', async () => {
+    try {
+      await window.db.logout();
+    } catch (e) {
+      console.error('Logout error:', e);
+    }
+  });
+
 });

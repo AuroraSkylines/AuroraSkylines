@@ -75,6 +75,13 @@ const db = {
     this.session = null;
     location.reload();
   },
+
+  async changePassword(newPassword) {
+    if (!this.session) throw new Error('Not logged in');
+    const { data, error } = await sb.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+    return data;
+  },
   
   async loadCloudSave(slotId = 1) {
     if (!this.session) return null;
