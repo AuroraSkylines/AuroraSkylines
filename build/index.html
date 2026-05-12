@@ -121,6 +121,11 @@
       <button type="button" class="menu-btn menu-btn--ghost" id="btn-new" onclick="startGameNew()">New Game</button>
       <button type="button" class="menu-btn menu-btn--ghost" id="btn-settings" onclick="document.getElementById('settings-overlay').classList.add('is-visible')">Settings</button>
     </div>
+
+    <!-- Version Indicator -->
+    <div id="version-display" class="version-display" onclick="openPatchnotes()">
+      <span id="version-text">Checking version...</span>
+    </div>
   </div>
 
   <!-- ── ACCOUNT MANAGER OVERLAY ──────────── -->
@@ -161,6 +166,38 @@
 
       <div class="pause-actions" style="margin-top:20px;">
         <button type="button" class="pm-btn" onclick="closeAdminManager()">Back</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PATCHNOTES OVERLAY ──────────── -->
+  <div id="patchnotes-overlay" aria-hidden="true" class="modal-overlay hidden">
+    <div class="pause-card" style="width: min(500px, 100%); margin: auto; max-height: 80vh; display: flex; flex-direction: column;">
+      <h2 class="pause-title">Patch Notes</h2>
+      <p class="pause-hint" style="margin-top: -2px; margin-bottom: 16px;">Latest GitHub Commits</p>
+      
+      <div id="patchnotes-list" style="flex: 1; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 12px; border: 1px solid rgba(255,255,255,0.05); min-height: 200px;">
+        <div style="text-align: center; color: rgba(255,255,255,0.3); font-family: var(--fu); font-size: 12px; padding: 20px;">Fetching latest changes...</div>
+      </div>
+
+      <div class="pause-actions" style="margin-top:20px;">
+        <button type="button" class="pm-btn pm-btn--primary" onclick="closePatchnotes()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PATCHNOTES OVERLAY ──────────── -->
+  <div id="patchnotes-overlay" aria-hidden="true" class="modal-overlay hidden">
+    <div class="pause-card" style="width: min(550px, 100%); margin: auto; max-height: 85vh; display: flex; flex-direction: column;">
+      <h2 class="pause-title">Patch Notes</h2>
+      <p class="pause-hint" style="margin-top: -2px; margin-bottom: 16px;">Latest updates from GitHub</p>
+      
+      <div id="patchnotes-list" class="patchnotes-container" style="flex: 1; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 12px; border: 1px solid rgba(255,255,255,0.05); min-height: 250px;">
+        <div style="text-align: center; color: rgba(255,255,255,0.3); font-family: var(--fu); font-size: 12px; padding: 20px;">Fetching latest changes...</div>
+      </div>
+
+      <div class="pause-actions" style="margin-top:20px;">
+        <button type="button" class="pm-btn pm-btn--primary" onclick="closePatchnotes()">Close</button>
       </div>
     </div>
   </div>
@@ -513,5 +550,6 @@
   <script src="js/ui.js"></script>
   <script src="js/input.js"></script>
   <script src="js/core.js"></script>
+  <script src="js/patchnotes.js"></script>
 </body>
 </html>
