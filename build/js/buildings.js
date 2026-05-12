@@ -319,10 +319,42 @@ const FACTORIES={
   windturbine:makeWindTurbine,solar:makeSolar,nuclear:makeNuclear,factory:makeFactory
 };
 
-function getRoadFacingAngle(gx,gz){
-  const checks=[[gx,gz+1,Math.PI],[gx,gz-1,0],[gx+1,gz,Math.PI/2],[gx-1,gz,-Math.PI/2]];
-  for(const[nx,nz,angle]of checks){
-    if(state.grid[key(nx,nz)]?.type==='road')return angle;
+function getRoadFacingAngle(gx, gz) {
+  // Check each of the 4 sides: [dx, dz, facing angle]
+  // angle = direction the building FRONT points (toward the road)
+  const sides = [
+    { dx: 0,  dz: 1,  angle: Math.PI },      // South road → face south
+    { dx: 0,  dz: -1, angle: 0 },             // North road → face north
+    { dx: 1,  dz: 0,  angle: Math.PI / 2 },   // East road  → face east
+    { dx: -1, dz: 0,  angle: -Math.PI / 2 },  // West road  → face west
+  ];
+
+  const roadSides = sides.filter(s => state.grid[key(gx + s.dx, gz + s.dz)]?.type === 'road');
+
+  if (roadSides.length === 0) {
+    // No adjacent road — try to face toward any road within 2 tiles
+    for (const s of sides) {
+      if (state.grid[key(gx + s.dx * 2, gz + s.dz * 2)]?.type === 'road') return s.angle;
+    }
+    // Nothing nearby, stable seeded default
+    const fallback = Math.floor(seededRandom(gx, gz, 99) * 4);
+    return sides[fallback].angle;
   }
-  return seededRandom(gx,gz,99)*Math.PI*2;
+
+  if (roadSides.length === 1) {
+    // Exactly one road neighbor — always face it
+    return roadSides[0].angle;
+  }
+
+  // Multiple road neighbors: prefer a road that is NOT also connected to the opposite side
+  // (i.e. avoid facing into an intersection — prefer a dead-end sidewalk side)
+  for (const s of roadSides) {
+    const opposite = sides.find(o => o.dx === -s.dx && o.dz === -s.dz);
+    const hasOppositeRoad = opposite && state.grid[key(gx + opposite.dx, gz + opposite.dz)]?.type === 'road';
+    if (!hasOppositeRoad) return s.angle; // Single-sided road, great choice
+  }
+
+  // All sides have roads (full intersection neighbor), use seeded pick for consistency
+  return roadSides[Math.floor(seededRandom(gx, gz, 98) * roadSides.length)].angle;
 }
+
