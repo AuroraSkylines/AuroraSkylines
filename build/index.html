@@ -125,20 +125,18 @@
 
   <!-- ── ACCOUNT MANAGER OVERLAY ──────────── -->
   <div id="account-overlay" aria-hidden="true" class="modal-overlay hidden">
-    <div class="auth-card">
-      <div class="auth-header">
-        <h2>Account Manager</h2>
-        <p class="auth-subtitle" id="account-username">Logged in as: ...</p>
-      </div>
+    <div class="pause-card" style="width: min(340px, 100%); margin: auto;">
+      <h2 class="pause-title">Account Manager</h2>
+      <p class="pause-hint" id="account-username" style="margin-top: -2px; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.05em;">Logged in as: ...</p>
       
-      <div class="auth-form active" style="margin-top: 1rem;">
-        <input type="password" id="account-new-password" placeholder="New Password" class="auth-input">
-        <button id="btn-change-password" class="auth-btn">Change Password</button>
-        <div id="account-msg" class="auth-error hidden" style="margin-top: 10px;"></div>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <input type="password" id="account-new-password" placeholder="New Password" class="auth-input" style="width: 100%; box-sizing: border-box;">
+        <button id="btn-change-password" class="pm-btn pm-btn--primary">Change Password</button>
+        <div id="account-msg" class="auth-error hidden" style="margin-top: 4px;"></div>
       </div>
 
-      <div class="pause-actions" style="margin-top:20px;">
-        <button type="button" class="pm-btn pm-btn--primary" onclick="closeAccountManager()">Close</button>
+      <div class="pause-actions" style="margin-top:24px;">
+        <button type="button" class="pm-btn" onclick="closeAccountManager()">Close</button>
         <button type="button" class="pm-btn pm-btn--danger" id="btn-logout">Log Out</button>
       </div>
     </div>
