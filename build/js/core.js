@@ -255,6 +255,38 @@ function updateMenuBg(slotKey) {
   location.reload();
 }
 
+function loadGameFromStorage() {
+  const raw = localStorage.getItem(SAVE_KEY);
+  if (!raw) return false;
+  try {
+    const data = JSON.parse(raw);
+    if (!data || !data.grid) return false;
+    
+    state.grid = data.grid;
+    state.gold = data.gold ?? 2000;
+    state.day = data.day ?? 1;
+    state.dayTimer = data.dayTimer ?? 0;
+    state.selected = data.selected || 'road';
+    
+    UPGRADE_DEFS.forEach(u => {
+      state.upgradeLevels[u.id] = data.upgradeLevels?.[u.id] ?? 0;
+    });
+    
+    if (data.camTarget) {
+      camTarget.set(data.camTarget.x, 0, data.camTarget.z);
+    }
+    if (data.zoomLevel) zoomLevel = data.zoomLevel;
+    
+    rebuildAllMeshes();
+    recalc();
+    applyZoom();
+    return true;
+  } catch (e) {
+    console.error('Load fail', e);
+    return false;
+  }
+}
+
 function rebuildAllMeshes() {
   clearCarsAndMeshes();
   Object.entries(state.grid).forEach(([k, cell]) => {
