@@ -7,75 +7,56 @@
 
 async function renderSaveManager() {
   const container = document.getElementById('sm-slots');
-  if (!container) {
-    console.error("Save Manager: Container #sm-slots not found!");
-    return;
-  }
+  if (!container) return;
   
-  container.innerHTML = '<div class="sm-loading" style="color:#fff;font-family:var(--fu);font-size:14px;padding:20px;text-align:center;">Loading cloud city...</div>';
+  container.innerHTML = '<div class="sm-loading" style="color:#fff;font-family:var(--fu);font-size:14px;padding:20px;text-align:center;">Fetching cloud cities...</div>';
 
-  let cloudData = null;
+  const slots = [1, 2, 3, 4, 5, 6];
+  const cloudData = {};
+
   try {
     if (window.db && typeof window.db.loadCloudSave === 'function') {
-      cloudData = await window.db.loadCloudSave();
-    } else {
-      console.warn("Database not ready for cloud load.");
+      const results = await Promise.all(slots.map(id => window.db.loadCloudSave(id)));
+      slots.forEach((id, idx) => { cloudData[id] = results[idx]; });
     }
-  } catch (e) {
-    console.error("Cloud load error:", e);
-  }
+  } catch (e) { console.error("Cloud fetch error:", e); }
 
   container.innerHTML = '';
   
-  try {
-    // Single Slot Mode for Private Alpha
-    const id = (typeof SAVE_SLOTS !== 'undefined' && SAVE_SLOTS[0]) ? SAVE_SLOTS[0] : 'aurora-save-slot-1';
-    const slot = cloudData; 
-    
+  slots.forEach(id => {
+    const slot = cloudData[id];
     const card = document.createElement('div');
-    card.className = 'sm-slot' + (slot ? ' has-save sm-slot--active' : ' empty');
+    card.className = 'sm-slot' + (slot ? ' has-save' : ' empty');
     
     if (slot && typeof slot === 'object') {
-      const date = slot.savedAt ? new Date(slot.savedAt).toLocaleString() : 'Recent Save';
+      const date = slot.savedAt ? new Date(slot.savedAt).toLocaleString() : 'Recent';
       const day = slot.day || 1;
       const gold = slot.gold || 0;
-      
       const inMenu = (typeof isBackgroundMode === 'undefined') || isBackgroundMode;
-      const actionBtn = inMenu 
-        ? `<button class="sm-btn sm-btn--load" onclick="window.loadFromSlot('${id}')">Load City</button>`
-        : `<button class="sm-btn sm-btn--save" onclick="window.saveToSlot('${id}')">Save Current</button>`;
 
       card.innerHTML = `
-        <div class="sm-slot-num">1</div>
+        <div class="sm-slot-num">${id}</div>
         <div class="sm-slot-info">
-          <div class="sm-slot-name">Cloud Save <span class="sm-tag">READY</span></div>
-          <div class="sm-slot-ts">Last sync: ${date}</div>
+          <div class="sm-slot-name">Slot ${id} <span class="sm-tag">READY</span></div>
+          <div class="sm-slot-ts">${date}</div>
           <div class="sm-stats">
             <div class="sm-stat">Day <span>${day}</span></div>
             <div class="sm-stat">Budget <span>${typeof fmtEuro === 'function' ? fmtEuro(gold) : gold + ' €'}</span></div>
           </div>
         </div>
         <div class="sm-slot-actions">
-          ${actionBtn}
+          ${inMenu ? `<button class="sm-btn sm-btn--load" onclick="window.loadFromSlot(${id})">Load</button>` : `<button class="sm-btn sm-btn--save" onclick="window.saveToSlot(${id})">Overwrite</button>`}
         </div>
       `;
     } else {
       card.innerHTML = `
-        <div class="sm-slot-num">1</div>
-        <div class="sm-slot-info">
-          <div class="sm-slot-name">New Cloud Slot</div>
-          <div class="sm-slot-empty">No city found in the cloud yet.</div>
-        </div>
-        <div class="sm-slot-actions">
-          <button class="sm-btn sm-btn--save" onclick="window.saveToSlot('${id}')">Start Here</button>
-        </div>
+        <div class="sm-slot-num">${id}</div>
+        <div class="sm-slot-info"><div class="sm-slot-name">Empty Slot</div></div>
+        <div class="sm-slot-actions"><button class="sm-btn sm-btn--save" onclick="window.saveToSlot(${id})">Start New</button></div>
       `;
     }
     container.appendChild(card);
-  } catch (err) {
-    console.error("Render loop error:", err);
-    container.innerHTML = '<div style="color:#f87171;padding:20px;text-align:center;">Error displaying saves. Check console (F12).</div>';
-  }
+  });
 }
 
 function buildSavePayload() {
@@ -105,23 +86,24 @@ function buildSavePayload() {
 
 async function saveToSlot(id) {
   const payload = buildSavePayload();
-  await window.db.syncCloudSave(payload);
+  if (window.db && window.db.syncCloudSave) {
+    await window.db.syncCloudSave(payload, id);
+  }
   
   localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
   sessionStorage.setItem('aurora-active-slot', id);
   
-  if (typeof toast === 'function') toast(`Saved to Cloud`, 'ok');
+  if (typeof toast === 'function') toast(`Saved to Cloud (Slot ${id})`, 'ok');
   
   if (isQuitMode) {
      location.reload();
   } else {
-     closeSaveManager();
      renderSaveManager();
   }
 }
 
 async function loadFromSlot(id) {
-  const payload = await window.db.loadCloudSave();
+  const payload = await window.db.loadCloudSave(id);
   if (!payload) return;
   
   localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
@@ -166,6 +148,6 @@ window.deleteSlot = deleteSlot;
 window.buildSavePayload = buildSavePayload;
 window.saveToCloud = () => {
     const activeSlot = sessionStorage.getItem('aurora-active-slot');
-    if (activeSlot) saveToSlot(activeSlot);
+    if (activeSlot) saveToSlot(parseInt(activeSlot, 10));
     else openSaveManager();
 };

@@ -76,12 +76,13 @@ const db = {
     location.reload();
   },
   
-  async loadCloudSave() {
+  async loadCloudSave(slotId = 1) {
     if (!this.session) return null;
     const { data, error } = await sb
       .from('game_saves')
       .select('save_data, updated_at')
       .eq('user_id', this.session.user.id)
+      .eq('slot_id', slotId)
       .maybeSingle();
       
     if (error) {
@@ -96,13 +97,14 @@ const db = {
     return null;
   },
   
-  async syncCloudSave(payload) {
+  async syncCloudSave(payload, slotId = 1) {
     if (!this.session) return;
     
     const { data: currentData, error: fetchError } = await sb
       .from('game_saves')
       .select('updated_at')
       .eq('user_id', this.session.user.id)
+      .eq('slot_id', slotId)
       .maybeSingle();
       
     if (fetchError) {
@@ -123,9 +125,10 @@ const db = {
       .from('game_saves')
       .upsert({
         user_id: this.session.user.id,
+        slot_id: slotId,
         save_data: payload,
         updated_at: new Date().toISOString()
-      }, { onConflict: 'user_id' })
+      }, { onConflict: 'user_id,slot_id' })
       .select('updated_at')
       .single();
       
