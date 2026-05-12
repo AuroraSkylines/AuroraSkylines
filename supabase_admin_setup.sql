@@ -26,11 +26,12 @@ CREATE POLICY "Admins can view invite keys"
   );
 
 -- 2. Invite Key Validation Trigger (Security Definer)
--- This runs BEFORE a user is created in auth.users
+-- This runs AFTER a user is created in auth.users so the foreign key constraint passes
 CREATE OR REPLACE FUNCTION public.check_invite_key_on_signup()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER -- Required to bypass RLS and access invite_keys from auth context
+SET search_path = public
 AS $$
 DECLARE
   key_record RECORD;
@@ -56,6 +57,7 @@ BEGIN
   END IF;
 
   -- Mark key as used and attach it to the new user ID
+  -- Because this is an AFTER INSERT trigger, NEW.id already exists in auth.users
   UPDATE public.invite_keys 
   SET used = true, used_by_user_id = NEW.id 
   WHERE id = key_record.id;
@@ -67,7 +69,7 @@ $$;
 -- Attach trigger to auth.users
 DROP TRIGGER IF EXISTS ensure_valid_invite_key ON auth.users;
 CREATE TRIGGER ensure_valid_invite_key
-  BEFORE INSERT ON auth.users
+  AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.check_invite_key_on_signup();
 
 -- 3. Admin RPC: Generate New Invite Key
