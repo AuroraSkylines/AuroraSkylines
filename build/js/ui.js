@@ -247,6 +247,14 @@ function initBuildMenuTooltips() {
 function updateDayBar() {
   const fill = document.getElementById('day-cycle-fill');
   if (fill) fill.style.width = `${(state.dayTimer / state.DAY_LEN) * 100}%`;
+
+  const clock = document.getElementById('game-clock');
+  if (clock) {
+    const totalMinutes = (state.dayTimer / state.DAY_LEN) * 24 * 60;
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = Math.floor(totalMinutes % 60);
+    clock.textContent = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+  }
 }
 
 function updateIncomePreview() {

@@ -461,11 +461,26 @@ function animate(now){
 
     // Sun and moon orbit based on time of day (phase 0 -> 1)
     const phase = state.dayTimer / state.DAY_LEN;
-    const sunAngle = -Math.PI/2 + (phase * Math.PI * 2); // starts at -PI/2 (bottom), reaches 0 (east) at dawn, PI/2 (top) at noon, PI (west) at dusk
-    sun.position.set(Math.sin(sunAngle)*45, Math.cos(sunAngle)*40, Math.sin(sunAngle)*15);
+    // Map phase 0.166 -> sunrise (-PI), 0.5 -> noon (0), 0.833 -> sunset (PI)
+    // This creates a 10min day and 5min night on a 15min (900s) cycle.
+    const sunAngle = (phase - 0.5) * (Math.PI / 0.3333);
+    const orbitRadius = 48;
+    const yMult = Math.cos(sunAngle * 0.5);
+
+    sun.position.set(
+      Math.sin(sunAngle * 0.5) * orbitRadius,
+      yMult * 42,
+      Math.sin(sunAngle * 0.5) * 18
+    );
+
     if (typeof moonLight !== 'undefined') {
-      const moonAngle = sunAngle + Math.PI; // opposite to sun
-      moonLight.position.set(Math.sin(moonAngle)*45, Math.cos(moonAngle)*40, Math.sin(moonAngle)*15);
+      const moonAngle = sunAngle + Math.PI * 2.0; 
+      const myMult = Math.cos(moonAngle * 0.5);
+      moonLight.position.set(
+        Math.sin(moonAngle * 0.5) * orbitRadius,
+        myMult * 42,
+        Math.sin(moonAngle * 0.5) * 18
+      );
     }
 
     animPart(dt);

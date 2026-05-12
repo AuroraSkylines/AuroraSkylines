@@ -52,12 +52,15 @@ const sun = new THREE.DirectionalLight(0xfff6e8, 1.4);
 sun.position.set(32, 48, 28);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
-sun.shadow.camera.near = 0.5;
-sun.shadow.camera.far = 150;
-sun.shadow.camera.left = sun.shadow.camera.bottom = -72;
-sun.shadow.camera.right = sun.shadow.camera.top = 72;
-sun.shadow.bias = -0.0004;
-sun.shadow.radius = 3.5;
+sun.shadow.camera.near = 10;
+sun.shadow.camera.far = 160;
+sun.shadow.camera.left = -50;
+sun.shadow.camera.right = 50;
+sun.shadow.camera.top = 50;
+sun.shadow.camera.bottom = -50;
+sun.shadow.bias = -0.0005;
+sun.shadow.normalBias = 0.04; // Helps with low poly artifacts
+sun.shadow.radius = 2;
 scene.add(sun);
 
 // Moon — cool blue-silver directional
@@ -119,14 +122,17 @@ function applySkyPhase(phase) {
   // Light intensities
   hemi.intensity    = 0.12 + p * 0.52;
   ambient.intensity = 0.12 + p * 0.40;
-  sun.intensity     = Math.max(0, (p - 0.08) / 0.35) * 1.6;
-  moonLight.intensity = Math.max(0, 0.40 - p * 0.8) * (p < 0.2 ? 1.0 : 0.0) + Math.max(0, 0.40 - (1-p) * 0.8) * (p > 0.8 ? 1.0 : 0.0);
-  moonLight.intensity = Math.max(0, 0.42 * (1 - Math.min(1, p * 2.5)));
+  sun.intensity     = Math.max(0, (p - 0.20) / 0.30) * 1.6;
+  
+  // Moonlight intensity: high at start (0.0) and end (1.0), zero during day (0.25 - 0.75)
+  const moonFade = Math.max(0, Math.min(1, (p - 0.2) * 5)) * Math.max(0, Math.min(1, (0.8 - p) * 5));
+  moonLight.intensity = (1.0 - moonFade) * 0.45;
+  
   rim.intensity     = 0.04 + (1 - p) * 0.20;
   fill.intensity    = 0.10 + p * 0.14;
 
   // Sun color arc: orange sunrise → white day → orange sunset
-  if (p < 0.30) {
+  if (p < 0.28) {
     sun.color.setHex(0xff7035);
   } else if (p < 0.55) {
     sun.color.setHex(0xfff6e8);
@@ -135,6 +141,11 @@ function applySkyPhase(phase) {
   } else {
     sun.color.setHex(0xff6020);
   }
+
+  // Dynamic shadow casting — only cast shadows when sun is sufficiently high
+  // phase 0.3 to 0.8 is roughly daytime.
+  const shadowEnabled = (window.gfxSettings?.shadowQuality !== 'off');
+  sun.castShadow = shadowEnabled && (p > 0.26 && p < 0.84);
 
   // Fog density — thicker at dawn/dusk
   if (scene.fog) {

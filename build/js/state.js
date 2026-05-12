@@ -13,7 +13,7 @@ const state = {
   grid: {},
   meshes: {},
   dayTimer: 0,
-  DAY_LEN: 14,
+  DAY_LEN: 900,
   upgradeLevels: {},
   nextEventDay: 5 + Math.floor(Math.random() * 4),
 };
