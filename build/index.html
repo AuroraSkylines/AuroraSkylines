@@ -369,7 +369,92 @@
   <script src="js/traffic.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/input.js"></script>
-  <script src="js/core.js"></script>
+  <script src="js/core.js"></script>  <script>
+  // ── AURORA AUDIO ENGINE ───────────────────────────────────────
+  // Runs AFTER all scripts are loaded. Wires controls on demand.
+  (function() {
+    var audio = document.getElementById('bgMusic');
+    if (!audio) return;
 
+    function getVol() { return parseInt(localStorage.getItem('aurora-music-vol') || '25', 10); }
+
+    function applyVol(pct) {
+      pct = Math.max(0, Math.min(100, parseInt(pct,10) || 0));
+      audio.volume = Math.pow(pct / 100, 2);
+      localStorage.setItem('aurora-music-vol', pct);
+      ['music-vol-main','music-vol'].forEach(function(id){
+        var el = document.getElementById(id); if(el) el.value = pct;
+      });
+      ['vol-label-main','vol-label'].forEach(function(id){
+        var el = document.getElementById(id); if(el) el.textContent = pct + '%';
+      });
+    }
+
+    function updateToggleText(paused) {
+      ['music-toggle-main','music-toggle'].forEach(function(id){
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = paused ? 'Play' : 'Pause';
+        if (paused) el.classList.add('paused'); else el.classList.remove('paused');
+      });
+    }
+
+    function wireControls() {
+      // Sliders
+      ['music-vol-main','music-vol'].forEach(function(id){
+        var sl = document.getElementById(id);
+        if (!sl || sl._auroraWired) return;
+        sl._auroraWired = true;
+        sl.addEventListener('input',  function(){ applyVol(sl.value); });
+        sl.addEventListener('change', function(){ applyVol(sl.value); });
+      });
+      // Toggles
+      ['music-toggle-main','music-toggle'].forEach(function(id){
+        var btn = document.getElementById(id);
+        if (!btn || btn._auroraWired) return;
+        btn._auroraWired = true;
+        btn.addEventListener('click', function(e){
+          e.stopPropagation();
+          if (audio.paused) { audio.play().catch(function(){}); updateToggleText(false); }
+          else { audio.pause(); updateToggleText(true); }
+        });
+      });
+      // Set current values
+      applyVol(getVol());
+      updateToggleText(audio.paused);
+    }
+
+    // Try to start music on first user interaction
+    function tryPlay() {
+      if (audio.paused) {
+        audio.play().then(function(){
+          updateToggleText(false);
+        }).catch(function(){});
+      }
+    }
+
+    // Wire immediately, and also whenever main-menu becomes visible
+    wireControls();
+
+    var observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(m) {
+        if (m.type === 'attributes' || m.type === 'childList') {
+          wireControls();
+        }
+      });
+    });
+    observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['style', 'class'] });
+
+    // Play music on first click anywhere
+    document.addEventListener('click', function startOnClick() {
+      tryPlay();
+      document.removeEventListener('click', startOnClick);
+    }, { once: true });
+
+    window._auroraAudio = audio;
+    window._auroraApplyVol = applyVol;
+    window._aurораWireControls = wireControls;
+  })();
+  </script>
 </body>
 </html>
