@@ -400,7 +400,12 @@ function init(loadSave, bgMode = false){
     const selector = document.getElementById('menu-bg-selector');
     if (selector) {
       selector.value = localStorage.getItem('aurora-menu-bg-slot') || SAVE_SLOTS[0];
+      selector.onchange = () => updateMenuBg(selector.value);
     }
+  }
+
+  if (typeof initMainMenuSettings === 'function') {
+    initMainMenuSettings();
   }
 
   initBuildMenuTooltips();
