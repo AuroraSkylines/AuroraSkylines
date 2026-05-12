@@ -508,7 +508,7 @@ body.game-paused #gameCanvas {
 }
 
 /* ── PAUSE & SETTINGS OVERLAYS ────────────────── */
-#pause-overlay, #settings-overlay {
+#pause-overlay, #settings-overlay, #ingame-settings-overlay {
   position: fixed;
   inset: 0;
   z-index: 8500;
@@ -521,7 +521,10 @@ body.game-paused #gameCanvas {
   pointer-events: none;
   transition: opacity 0.22s ease, visibility 0.22s;
 }
-#pause-overlay.is-visible, #settings-overlay.is-visible {
+#ingame-settings-overlay {
+  z-index: 8600;
+}
+#pause-overlay.is-visible, #settings-overlay.is-visible, #ingame-settings-overlay.is-visible {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -699,6 +702,15 @@ body.game-paused #gameCanvas {
   border-color: rgba(251,113,133,0.45);
   color: #fecdd3;
   background: rgba(251,113,133,0.1);
+}
+.pm-btn--settings {
+  border-color: rgba(56,189,248,0.35);
+  color: rgba(56,189,248,0.9);
+  background: rgba(56,189,248,0.07);
+}
+.pm-btn--settings:hover {
+  background: rgba(56,189,248,0.14);
+  border-color: rgba(56,189,248,0.55);
 }
 .pause-audio {
   margin-top: 22px;

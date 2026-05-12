@@ -196,13 +196,21 @@
         state.DAY_LEN = 30 / parseFloat(val);
       }
     }
+    function openIngameSettings() {
+      const el = document.getElementById('ingame-settings-overlay');
+      if (el) { el.classList.add('is-visible'); el.setAttribute('aria-hidden', 'false'); }
+    }
+    function closeIngameSettings() {
+      const el = document.getElementById('ingame-settings-overlay');
+      if (el) { el.classList.remove('is-visible'); el.setAttribute('aria-hidden', 'true'); }
+    }
   </script>
 
   <canvas id="gameCanvas"></canvas>
 
   <div id="pause-overlay" aria-hidden="true">
     <div class="pause-backdrop"></div>
-    <div class="pause-card pause-card--wide">
+    <div class="pause-card">
 
       <!-- Header -->
       <div class="pause-header">
@@ -213,25 +221,47 @@
         </div>
       </div>
 
-      <!-- Tabs -->
+      <!-- Actions -->
+      <div class="pause-actions" style="margin-top:20px;">
+        <button type="button" class="pm-btn pm-btn--primary" id="pause-resume">▶︎ Resume</button>
+        <button type="button" class="pm-btn" id="pause-save-open">💾 Save Manager</button>
+        <button type="button" class="pm-btn pm-btn--danger" id="pause-quit">Save &amp; Quit to Menu</button>
+        <button type="button" class="pm-btn pm-btn--settings" id="pause-settings-open" onclick="openIngameSettings()">&#9881; Settings</button>
+      </div>
+
+      <p class="pause-foot"><kbd>WASD</kbd> / arrows pan &nbsp;·&nbsp; drag &nbsp;·&nbsp; wheel to zoom</p>
+    </div>
+  </div>
+
+  <!-- ── IN-GAME SETTINGS OVERLAY ──────────────────── -->
+  <div id="ingame-settings-overlay" aria-hidden="true">
+    <div class="pause-backdrop" onclick="closeIngameSettings()"></div>
+    <div class="pause-card">
+      <h2 class="pause-title">Settings</h2>
+
       <div class="settings-tabs">
-        <button class="settings-tab active" onclick="switchSettingsTab(this, 'pause-tab-game')">Game</button>
-        <button class="settings-tab" onclick="switchSettingsTab(this, 'pause-tab-audio')">Audio</button>
-        <button class="settings-tab" onclick="switchSettingsTab(this, 'pause-tab-settings')">Settings</button>
+        <button class="settings-tab active" onclick="switchSettingsTab(this, 'igs-tab-graphics')">Graphics</button>
+        <button class="settings-tab" onclick="switchSettingsTab(this, 'igs-tab-audio')">Audio</button>
+        <button class="settings-tab" onclick="switchSettingsTab(this, 'igs-tab-gameplay')">Gameplay</button>
       </div>
 
-      <!-- Tab: Game -->
-      <div id="pause-tab-game" class="settings-panel">
-        <div class="pause-actions">
-          <button type="button" class="pm-btn pm-btn--primary" id="pause-resume">▶ Resume</button>
-          <button type="button" class="pm-btn" id="pause-save-open">💾 Save Manager</button>
-          <button type="button" class="pm-btn pm-btn--danger" id="pause-quit">Save &amp; Quit to Menu</button>
+      <!-- Graphics -->
+      <div id="igs-tab-graphics" class="settings-panel">
+        <div class="pause-audio" style="margin-top:10px; border-top:none; padding-top:0;">
+          <div class="settings-row">
+            <label class="settings-label">Graphics API</label>
+            <span class="settings-value">WebGL 2.0</span>
+          </div>
+          <div class="settings-row">
+            <label class="settings-label">Resolution</label>
+            <span class="settings-value">Native</span>
+          </div>
+          <p class="pause-hint" style="margin-top:20px;">More graphics settings coming soon...</p>
         </div>
-        <p class="pause-foot"><kbd>WASD</kbd> / arrows pan &nbsp;·&nbsp; drag to pan &nbsp;·&nbsp; wheel to zoom</p>
       </div>
 
-      <!-- Tab: Audio -->
-      <div id="pause-tab-audio" class="settings-panel hidden">
+      <!-- Audio -->
+      <div id="igs-tab-audio" class="settings-panel hidden">
         <div class="pause-audio" style="margin-top:10px; border-top:none; padding-top:0;">
           <div class="settings-row">
             <label class="settings-label">Music</label>
@@ -245,17 +275,9 @@
         </div>
       </div>
 
-      <!-- Tab: Settings -->
-      <div id="pause-tab-settings" class="settings-panel hidden">
+      <!-- Gameplay -->
+      <div id="igs-tab-gameplay" class="settings-panel hidden">
         <div class="pause-audio" style="margin-top:10px; border-top:none; padding-top:0;">
-          <div class="settings-row">
-            <label class="settings-label">Graphics API</label>
-            <span class="settings-value" id="pause-gfx-api">WebGL 2.0</span>
-          </div>
-          <div class="settings-row">
-            <label class="settings-label">Micro-stutter Guard</label>
-            <span class="settings-value" id="pause-stutter">—</span>
-          </div>
           <div class="settings-row">
             <label class="settings-label">Day Speed</label>
             <select class="settings-select" id="pause-day-speed" onchange="applyDaySpeed(this.value)">
@@ -267,6 +289,9 @@
         </div>
       </div>
 
+      <div class="pause-actions" style="margin-top:24px;">
+        <button type="button" class="pm-btn pm-btn--primary" onclick="closeIngameSettings()">Close</button>
+      </div>
     </div>
   </div>
 
