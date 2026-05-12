@@ -93,29 +93,41 @@ function makeRoad(gx, gz) {
   const isStraightEW = (E || W) && !N && !S;
 
   if (nLinks === 4) {
-    if (N) _addBox(g, 0, mY, -(half - sw - 0.15), 0.7, mH, 0.08, _roadMats.stopLine);
-    if (S) _addBox(g, 0, mY, (half - sw - 0.15), 0.7, mH, 0.08, _roadMats.stopLine);
-    if (E) _addBox(g, (half - sw - 0.15), mY, 0, 0.08, mH, 0.7, _roadMats.stopLine);
-    if (W) _addBox(g, -(half - sw - 0.15), mY, 0, 0.08, mH, 0.7, _roadMats.stopLine);
+    if (N) {
+      _addBox(g, 0, mY, -(half - sw - 0.15), 0.7, mH, 0.08, _roadMats.stopLine);
+      _addBox(g, 0, mY, -1, 0.07, mH, 0.3, _roadMats.marking);
+    }
+    if (S) {
+      _addBox(g, 0, mY, (half - sw - 0.15), 0.7, mH, 0.08, _roadMats.stopLine);
+      _addBox(g, 0, mY, 1, 0.07, mH, 0.3, _roadMats.marking);
+    }
+    if (E) {
+      _addBox(g, (half - sw - 0.15), mY, 0, 0.08, mH, 0.7, _roadMats.stopLine);
+      _addBox(g, 1, mY, 0, 0.3, mH, 0.07, _roadMats.marking);
+    }
+    if (W) {
+      _addBox(g, -(half - sw - 0.15), mY, 0, 0.08, mH, 0.7, _roadMats.stopLine);
+      _addBox(g, -1, mY, 0, 0.3, mH, 0.07, _roadMats.marking);
+    }
   } else if (nLinks === 3) {
     if (N && S) {
       [-1, -0.5, 0, 0.5, 1].forEach(z => _addBox(g, 0, mY, z, 0.07, mH, 0.3, _roadMats.marking));
       if (E) {
-        [0.5, 1].forEach(x => _addBox(g, x, mY, 0, 0.3, mH, 0.07, _roadMats.marking));
+        _addBox(g, 1, mY, 0, 0.3, mH, 0.07, _roadMats.marking);
         _addBox(g, (half - sw - 0.15), mY, 0, 0.08, mH, 0.7, _roadMats.stopLine);
       }
       if (W) {
-        [-1, -0.5].forEach(x => _addBox(g, x, mY, 0, 0.3, mH, 0.07, _roadMats.marking));
+        _addBox(g, -1, mY, 0, 0.3, mH, 0.07, _roadMats.marking);
         _addBox(g, -(half - sw - 0.15), mY, 0, 0.08, mH, 0.7, _roadMats.stopLine);
       }
     } else {
       [-1, -0.5, 0, 0.5, 1].forEach(x => _addBox(g, x, mY, 0, 0.3, mH, 0.07, _roadMats.marking));
       if (N) {
-        [-1, -0.5].forEach(z => _addBox(g, 0, mY, z, 0.07, mH, 0.3, _roadMats.marking));
+        _addBox(g, 0, mY, -1, 0.07, mH, 0.3, _roadMats.marking);
         _addBox(g, 0, mY, -(half - sw - 0.15), 0.7, mH, 0.08, _roadMats.stopLine);
       }
       if (S) {
-        [0.5, 1].forEach(z => _addBox(g, 0, mY, z, 0.07, mH, 0.3, _roadMats.marking));
+        _addBox(g, 0, mY, 1, 0.07, mH, 0.3, _roadMats.marking);
         _addBox(g, 0, mY, (half - sw - 0.15), 0.7, mH, 0.08, _roadMats.stopLine);
       }
     }
