@@ -27,7 +27,7 @@ CREATE POLICY "Admins can view invite keys"
 
 -- 2. Drop the buggy auth trigger (if it exists)
 DROP TRIGGER IF EXISTS ensure_valid_invite_key ON auth.users;
-DROP FUNCTION IF EXISTS public.check_invite_key_on_signup();
+DROP FUNCTION IF EXISTS public.check_invite_key_on_signup() CASCADE;
 
 -- 3. RPC: Validate Invite Key (Client-side check BEFORE signup)
 CREATE OR REPLACE FUNCTION public.is_key_valid(invite_key text)
