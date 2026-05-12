@@ -100,7 +100,7 @@ function incomeForCell(c) {
   const gc = getUpgradeLevel('green_city');
   if (c.type === 'shop') inc += ch * 6;
   if (c.type === 'park') inc += gc * 2;
-  return inc;
+  return inc * 24;
 }
 
 function happinessMultiplier() {

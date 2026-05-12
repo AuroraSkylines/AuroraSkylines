@@ -56,13 +56,13 @@ function tickDay(dt){
     state.nextEventDay = state.day + 5 + Math.floor(Math.random() * 5);
     const events = [
       { msg: '🎉 City Festival! Parks thriving.', gold: 0, type: 'ok', condition: () => Object.values(state.grid).some(c => c.type==='park') },
-      { msg: '💰 Tax Windfall! Budget surges.', gold: Math.max(120, Math.floor(state.pop * 8)), type: 'ok' },
-      { msg: '⚡ Power Surge! Grid overloaded.', gold: -80, type: 'error', condition: () => state.energy > 0 },
-      { msg: '🏗️ Construction Boom! Builders arrive.', gold: 200, type: 'ok', condition: () => state.pop > 10 },
-      { msg: '🌧️ Storm damage. Repairs needed.', gold: -Math.floor(50 + Math.random() * 100), type: 'error' },
-      { msg: '🤝 Trade Deal! Commerce booms.', gold: Math.max(80, Math.floor(Object.values(state.grid).filter(c=>c.type==='shop').length * 30)), type: 'ok' },
-      { msg: '🔥 Factory Fire! Insurers pay out.', gold: -150, type: 'error', condition: () => Object.values(state.grid).some(c=>c.type==='factory') },
-      { msg: '🎓 Tech Grant! City gets smarter.', gold: 300, type: 'ok', condition: () => state.day > 15 },
+      { msg: '💰 Tax Windfall! Budget surges.', gold: Math.max(2880, Math.floor(state.pop * 192)), type: 'ok' },
+      { msg: '⚡ Power Surge! Grid overloaded.', gold: -1920, type: 'error', condition: () => state.energy > 0 },
+      { msg: '🏗️ Construction Boom! Builders arrive.', gold: 4800, type: 'ok', condition: () => state.pop > 10 },
+      { msg: '🌧️ Storm damage. Repairs needed.', gold: -Math.floor(1200 + Math.random() * 2400), type: 'error' },
+      { msg: '🤝 Trade Deal! Commerce booms.', gold: Math.max(1920, Math.floor(Object.values(state.grid).filter(c=>c.type==='shop').length * 720)), type: 'ok' },
+      { msg: '🔥 Factory Fire! Insurers pay out.', gold: -3600, type: 'error', condition: () => Object.values(state.grid).some(c=>c.type==='factory') },
+      { msg: '🎓 Tech Grant! City gets smarter.', gold: 7200, type: 'ok', condition: () => state.day > 15 },
     ];
     const valid = events.filter(e => !e.condition || e.condition());
     const ev = valid[Math.floor(Math.random() * valid.length)];
