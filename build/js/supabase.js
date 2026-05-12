@@ -36,8 +36,15 @@ const db = {
     if (!username || !password || !inviteKey) {
       throw new Error('All fields are required');
     }
+    
+    // 1. Validate the invite key first!
+    const { data: isValid, error: valError } = await sb.rpc('is_key_valid', { invite_key: inviteKey });
+    if (valError) throw new Error(valError.message);
+    if (!isValid) throw new Error('Invalid or already used invite key.');
+
     const email = getSyntheticEmail(username);
     
+    // 2. Sign up the user
     const { data, error } = await sb.auth.signUp({
       email,
       password,
@@ -50,12 +57,12 @@ const db = {
     });
     
     if (error) {
-      let msg = error.message;
-      if (msg.includes('Database error saving new user')) {
-         msg = 'Invalid or already used invite key.';
-      }
-      throw new Error(msg);
+      throw new Error(error.message);
     }
+
+    // 3. Consume the key now that signup succeeded
+    await sb.rpc('consume_key', { invite_key: inviteKey });
+
     return data;
   },
   

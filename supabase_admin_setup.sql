@@ -25,52 +25,42 @@ CREATE POLICY "Admins can view invite keys"
     )
   );
 
--- 2. Invite Key Validation Trigger (Security Definer)
--- This runs AFTER a user is created in auth.users so the foreign key constraint passes
-CREATE OR REPLACE FUNCTION public.check_invite_key_on_signup()
-RETURNS trigger
+-- 2. Drop the buggy auth trigger (if it exists)
+DROP TRIGGER IF EXISTS ensure_valid_invite_key ON auth.users;
+DROP FUNCTION IF EXISTS public.check_invite_key_on_signup();
+
+-- 3. RPC: Validate Invite Key (Client-side check BEFORE signup)
+CREATE OR REPLACE FUNCTION public.is_key_valid(invite_key text)
+RETURNS boolean
 LANGUAGE plpgsql
-SECURITY DEFINER -- Required to bypass RLS and access invite_keys from auth context
-SET search_path = public
+SECURITY DEFINER
 AS $$
-DECLARE
-  key_record RECORD;
-  provided_key TEXT;
 BEGIN
-  -- Extract the invite key from the signup metadata
-  provided_key := NEW.raw_user_meta_data->>'invite_key';
-
-  -- If no key provided, reject
-  IF provided_key IS NULL OR provided_key = '' THEN
-    RAISE EXCEPTION 'An invite key is required to register.';
-  END IF;
-
-  -- Find the invite key and lock the row
-  SELECT * INTO key_record 
-  FROM public.invite_keys 
-  WHERE key = provided_key AND used = false 
-  FOR UPDATE;
-
-  -- If key doesn't exist or is used, reject
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'Invalid or already used invite key.';
-  END IF;
-
-  -- Mark key as used and attach it to the new user ID
-  -- Because this is an AFTER INSERT trigger, NEW.id already exists in auth.users
-  UPDATE public.invite_keys 
-  SET used = true, used_by_user_id = NEW.id 
-  WHERE id = key_record.id;
-
-  RETURN NEW;
+  RETURN EXISTS (
+    SELECT 1 FROM public.invite_keys 
+    WHERE key = invite_key AND used = false
+  );
 END;
 $$;
 
--- Attach trigger to auth.users
-DROP TRIGGER IF EXISTS ensure_valid_invite_key ON auth.users;
-CREATE TRIGGER ensure_valid_invite_key
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.check_invite_key_on_signup();
+-- 4. RPC: Consume Invite Key (Client-side check AFTER signup)
+CREATE OR REPLACE FUNCTION public.consume_key(invite_key text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  -- We rely on the fact that only authenticated users can call this successfully
+  -- and it marks the key as used by them.
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  UPDATE public.invite_keys 
+  SET used = true, used_by_user_id = auth.uid()
+  WHERE key = invite_key AND used = false;
+END;
+$$;
 
 -- 3. Admin RPC: Generate New Invite Key
 CREATE OR REPLACE FUNCTION public.generate_invite_key(prefix text DEFAULT 'ALPHA-')
