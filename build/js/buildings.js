@@ -320,41 +320,41 @@ const FACTORIES={
 };
 
 function getRoadFacingAngle(gx, gz) {
-  // Fixed camera at (28,28,28) only shows the +Z face (lower-left on screen)
-  // and +X face (lower-right on screen). The building front (door/windows) is at +Z.
-  //
-  // rotation.y = 0      → front faces +Z = visible (lower-left). Use for E-W roads.
-  // rotation.y = -PI/2  → front faces +X = visible (lower-right). Use for N-S roads.
-  // rotation.y = PI     → front faces -Z = HIDDEN from camera. Never use.
-  // rotation.y = PI/2   → front faces -X = HIDDEN from camera. Never use.
-
   const N = state.grid[key(gx,   gz-1)]?.type === 'road';
   const S = state.grid[key(gx,   gz+1)]?.type === 'road';
   const E = state.grid[key(gx+1, gz  )]?.type === 'road';
   const W = state.grid[key(gx-1, gz  )]?.type === 'road';
 
-  const hasEW = S || N;  // Road runs east-west (north or south of building)
-  const hasNS = E || W;  // Road runs north-south (east or west of building)
+  // Priority: face the road that is on a unique side (not through-road)
+  // Camera-visible angles first (0 = face +Z, -PI/2 = face +X) to prefer visible windows
+  // Then hidden angles (PI = face -Z, PI/2 = face -X) for roads behind building
 
-  // Single-sided road — choose the appropriate camera-facing orientation
-  if (hasEW && !hasNS) return 0;           // E-W road: face south (+Z, lower-left)
-  if (hasNS && !hasEW) return -Math.PI/2;  // N-S road: face east (+X, lower-right)
+  // Single road neighbor
+  if (S && !N && !E && !W) return 0;           // road south  → face south   (+Z visible)
+  if (E && !N && !S && !W) return -Math.PI/2;  // road east   → face east    (+X visible)
+  if (N && !S && !E && !W) return Math.PI;     // road north  → face north   (-Z, faces road)
+  if (W && !N && !S && !E) return Math.PI/2;   // road west   → face west    (-X, faces road)
 
-  // Corner/intersection: prefer E-W facing (south-facing = most common "front" look)
-  if (hasEW) return 0;
-  if (hasNS) return -Math.PI/2;
+  // Multiple roads: prefer camera-visible sides (south/east) over hidden (north/west)
+  if (S && !N) return 0;
+  if (E && !W) return -Math.PI/2;
+  if (N && !S) return Math.PI;
+  if (W && !E) return Math.PI/2;
 
-  // No adjacent road — check 2 tiles out
-  const N2 = state.grid[key(gx,   gz-2)]?.type === 'road';
-  const S2 = state.grid[key(gx,   gz+2)]?.type === 'road';
-  const E2 = state.grid[key(gx+2, gz  )]?.type === 'road';
-  const W2 = state.grid[key(gx-2, gz  )]?.type === 'road';
-  if (S2 || N2) return 0;
-  if (E2 || W2) return -Math.PI/2;
+  // Straight through-road or 4-way: pick camera-facing direction
+  if (S || N) return 0;
+  if (E || W) return -Math.PI/2;
 
-  // Stable seeded fallback — 50/50 between the two visible angles
+  // No adjacent road — look 2 tiles out
+  if (state.grid[key(gx,   gz+2)]?.type === 'road') return 0;
+  if (state.grid[key(gx+2, gz  )]?.type === 'road') return -Math.PI/2;
+  if (state.grid[key(gx,   gz-2)]?.type === 'road') return Math.PI;
+  if (state.grid[key(gx-2, gz  )]?.type === 'road') return Math.PI/2;
+
+  // Seeded stable fallback
   return seededRandom(gx, gz, 99) > 0.5 ? 0 : -Math.PI/2;
 }
+
 
 
 
