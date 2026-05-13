@@ -784,15 +784,22 @@ function getRoadFacingAngle(gx, gz) {
   const E = state.grid[key(gx+1, gz  )]?.type === 'road';
   const W = state.grid[key(gx-1, gz  )]?.type === 'road';
 
-  // Single road neighbour — always face it directly
-  if (S && !N && !E && !W) return 0;           // road south → face south
-  if (E && !N && !S && !W) return -Math.PI/2;  // road east  → face east
-  if (N && !S && !E && !W) return Math.PI;     // road north → face north
-  if (W && !N && !S && !E) return Math.PI/2;   // road west  → face west
+  // "Unique" directions: road on that side but NOT on the opposite side.
+  // These identify the "inner path" / dead-end access road.
+  // Through-roads (both N+S or both E+W) are de-prioritised.
+  const uS = S && !N;  // unique south
+  const uE = E && !W;  // unique east
+  const uN = N && !S;  // unique north
+  const uW = W && !E;  // unique west
 
-  // Multiple road neighbours — face the most prominent one.
-  // Prefer south then east (camera-visible) when there is a choice,
-  // but north/west are used when they are the unique side.
+  // Step 1: prefer unique sides (the actual access road), tiebreak S>E>N>W
+  if (uS) return 0;
+  if (uE) return -Math.PI/2;
+  if (uN) return Math.PI;
+  if (uW) return Math.PI/2;
+
+  // Step 2: all present roads are through-roads (or all 4 present).
+  // Face whichever exists, tiebreak S>E>N>W.
   if (S) return 0;
   if (E) return -Math.PI/2;
   if (N) return Math.PI;
