@@ -436,36 +436,108 @@ function makeApartment(gx,gz){
 function makeShop(gx,gz){
   const g=new THREE.Group();
   const v=Math.floor(rnd(0,3,gx,gz,1));
-  const glassM={win:true,em:0x0ea5e9,ei:0,sh:140};
+
+  function win(x,y,z,wr,wh,axis,glassC,glassOpt){
+    const trimC = 0x222222;
+    const fThick=0.06;
+    const gThick=0.04;
+    const fw=axis==='z'?wr+0.06:fThick;
+    const fd=axis==='z'?fThick:wr+0.06;
+    _add(g,_box(fw,wh+0.06,fd,trimC,{shadow:false}),x,y,z);
+    const gw=axis==='z'?wr:gThick;
+    const gd=axis==='z'?gThick:wr;
+    _add(g,_box(gw,wh,gd,glassC,{...glassOpt, shadow:false}),x,y,z);
+  }
 
   if(v===0){
-    // Boutique
-    _add(g,_box(1.4,.72,1.0,0xfde8d8),0,.48,0);
-    _add(g,_box(1.5,.1,1.1,0x1e293b),0,.96,0);// parapet
-    // Awning
-    const awn=_box(1.5,.07,.48,0xe11d48);awn.rotation.x=-.22;
-    _add(g,awn,0,.8,.56);
-    _add(g,_box(1.0,.28,.05,0xbae6fd,glassM),0,.42,.53);// storefront glass
-    _add(g,_box(.72,.2,.06,0xfbbf24,{em:0xf59e0b,ei:0,sh:60}),.0,.65,.53);// sign
-    _add(g,_cyl(.06,.07,.22,5,0x333333),-.55,.23,.6);// bin
-    _add(g,_box(.14,.24,.14,0x9ca3af,{shadow:false}),.6,.24,.58);// flower pot
+    // ── Variant 0: Corner Bodega ──
+    const wallC=0x8b3a3a; // red brick
+    const glassC=0xbae6fd;
+    const gOpt={win:true,em:0x0ea5e9,ei:0,sh:120};
+    
+    _add(g,_box(1.2,0.8,1.2,wallC),0,0.4,0);
+    _add(g,_box(1.3,0.1,1.3,0x444444),0,0.85,0); // roof parapet
+    
+    // Roof AC unit
+    _add(g,_box(0.4,0.3,0.4,0x737373),-0.3,0.95,0.2); 
+    _add(g,_cyl(0.1,0.1,0.1,6,0x222222),-0.3,1.1,0.2); // fan
+    
+    // Front window and door
+    win(0.25, 0.35, 0.6, 0.4, 0.4, 'z', glassC, gOpt);
+    // Door
+    _add(g,_box(0.3, 0.5, 0.05, 0xd4d4d8), -0.3, 0.25, 0.61);
+    
+    // Angled Awning over window
+    const awn = _add(g,_box(1.2, 0.05, 0.4, 0xef4444), 0, 0.6, 0.7);
+    awn.rotation.x = -0.2;
+    
+    // Neon sign above awning
+    _add(g,_box(0.6, 0.2, 0.05, 0xfcd34d, {em:0xf59e0b, ei:0}), 0, 0.75, 0.65);
+    
+    // Side dumpster in the back
+    _add(g,_box(0.3, 0.25, 0.4, 0x166534), 0.75, 0.125, -0.2);
+
   } else if(v===1){
-    // Strip mall 3 bays
-    _add(g,_box(1.9,.62,.88,0xf8f5f0),0,.43,0);
-    _add(g,_box(2.0,.1,.98,0x374151),0,.79,0);
-    const bayX=[-0.58,0,.58];
-    bayX.forEach((bx,i)=>{
-      _add(g,_box(.52,.36,.05,0xbae6fd,glassM),bx,.38,.46);
-      const awn=_box(.54,.06,.3,new THREE.Color().setHSL(i*.33,.8,.45));awn.rotation.x=-.18;
-      _add(g,awn,bx,.6,.48);
-      _add(g,_box(.42,.16,.05,0xfbbf24,{em:0xf59e0b,ei:0}),bx,.64,.46);
-    });
+    // ── Variant 1: Modern Supermarket / Retail ──
+    const wallC=0xf8fafc;
+    const glassC=0x38bdf8;
+    const gOpt={win:true,em:0x0284c7,ei:0,sh:150};
+    
+    _add(g,_box(1.8, 0.6, 1.4, wallC), 0, 0.3, 0);
+    _add(g,_box(1.9, 0.15, 1.5, 0x94a3b8), 0, 0.675, 0); // Flat overhanging roof
+    
+    // Front glass facade (3 large panels)
+    for(let i=0; i<3; i++) {
+      win(-0.5 + i*0.5, 0.3, 0.7, 0.3, 0.4, 'z', glassC, gOpt);
+    }
+    
+    // Flat blue canopy over entrance
+    _add(g,_box(1.6, 0.05, 0.5, 0x3b82f6), 0, 0.55, 0.85);
+    // 2 support poles for canopy
+    _add(g,_cyl(0.02, 0.02, 0.55, 4, 0x64748b), -0.7, 0.275, 1.05);
+    _add(g,_cyl(0.02, 0.02, 0.55, 4, 0x64748b), 0.7, 0.275, 1.05);
+    
+    // Shopping cart return corral
+    _add(g,_box(0.4, 0.2, 0.05, 0x64748b), -0.5, 0.1, 1.2);
+    _add(g,_box(0.05, 0.2, 0.3, 0x64748b), -0.7, 0.1, 1.05);
+    _add(g,_box(0.05, 0.2, 0.3, 0x64748b), -0.3, 0.1, 1.05);
+
   } else {
-    // Dark modern corner store
-    _add(g,_box(1.3,.85,1.25,0x1a2030),0,.55,0);
-    _add(g,_box(1.1,.62,.05,0xbae6fd,{win:true,em:0x7dd3fc,ei:0,sh:150}),0,.46,.64);
-    _add(g,_box(1.4,.1,1.35,0xf0f5f8),0,1.0,0);
-    _add(g,_box(.9,.22,.06,0x22d3ee,{em:0x06b6d4,ei:0,sh:80}),0,.78,.65);// neon sign
+    // ── Variant 2: Artisan Cafe / Bakery ──
+    const wallC=0xfae8ff; // pastel pinkish
+    const woodC=0x78350f;
+    const glassC=0xfde047;
+    const gOpt={win:true,em:0xeab308,ei:0,sh:120}; // warm inviting glow
+    
+    // 2 story narrow building
+    _add(g,_box(1.0, 0.5, 1.0, wallC), 0, 0.25, 0);
+    _add(g,_box(1.0, 0.5, 1.0, wallC), 0, 0.75, 0);
+    
+    // Steep gable roof
+    const roof = _add(g,_cyl(0, 0.75, 0.6, 4, 0x0f172a), 0, 1.3, 0);
+    roof.rotation.y = Math.PI/4;
+    
+    // Lower front window
+    win(-0.2, 0.25, 0.5, 0.4, 0.3, 'z', glassC, gOpt);
+    // Door
+    _add(g,_box(0.25, 0.4, 0.05, woodC), 0.25, 0.2, 0.51);
+    
+    // Round cafe awning over window
+    const awn = _add(g,_cyl(0.25, 0.25, 0.5, 16, 0xf43f5e), -0.2, 0.45, 0.5);
+    awn.rotation.z = Math.PI/2;
+    
+    // Outdoor table seating
+    _add(g,_cyl(0.15, 0.15, 0.02, 12, 0xffffff), -0.3, 0.15, 0.8);
+    _add(g,_cyl(0.02, 0.02, 0.15, 4, 0x111111), -0.3, 0.075, 0.8);
+    // Chairs
+    _add(g,_box(0.1, 0.1, 0.1, 0x3b82f6), -0.15, 0.05, 0.8);
+    _add(g,_box(0.1, 0.1, 0.1, 0x3b82f6), -0.45, 0.05, 0.8);
+    
+    // Upstairs window
+    win(0, 0.75, 0.5, 0.5, 0.3, 'z', glassC, gOpt);
+    // Flower box on upstairs window
+    _add(g,_box(0.6, 0.08, 0.1, 0x854d0e), 0, 0.55, 0.55);
+    _add(g,_box(0.5, 0.08, 0.05, 0x22c55e), 0, 0.6, 0.55);
   }
   return optimizeBuildingGroup(g);
 }
@@ -575,29 +647,107 @@ function makeNuclear(gx,gz){
 function makeFactory(gx,gz){
   const g=new THREE.Group();
   const v=Math.floor(rnd(0,3,gx,gz,1));
-  const bMat=new THREE.MeshPhongMaterial({color:0x94a3b8,flatShading:true,shininess:20});
+
+  function win(x,y,z,wr,wh,axis,glassC,glassOpt){
+    const trimC = 0x333333;
+    const fThick=0.08;
+    const gThick=0.04;
+    const fw=axis==='z'?wr+0.08:fThick;
+    const fd=axis==='z'?fThick:wr+0.08;
+    _add(g,_box(fw,wh+0.08,fd,trimC,{shadow:false}),x,y,z);
+    const gw=axis==='z'?wr:gThick;
+    const gd=axis==='z'?gThick:wr;
+    _add(g,_box(gw,wh,gd,glassC,{...glassOpt, shadow:false}),x,y,z);
+  }
 
   if(v===0){
-    _add(g,_box(1.65,.92,1.3,0x94a3b8),.0,.58,0);
-    _add(g,_box(.85,.75,.9,0x7a8899),-.5,.49,.15);// annex
-    [-.45,0,.45].forEach((cx,i)=>{
-      _add(g,_cyl(.09,.13,.75+i*.15,6,0x475569),cx,1.42,0);// chimneys
-    });
-    _add(g,_box(1.1,.04,1.35,0x475569),.0,1.06,0);// roof strip
+    // ── Variant 0: Classic Red-Brick Foundry ──
+    const brick=0x7f1d1d;
+    const roofC=0x3f3f46;
+    const glassC=0xfef08a; // warm yellow glow inside
+    const gOpt={win:true,em:0xca8a04,ei:0,sh:80};
+    
+    _add(g,_box(1.8, 0.8, 1.2, brick), 0, 0.4, 0);
+    
+    // Sawtooth roof (3 teeth with skylights)
+    for(let i=0; i<3; i++) {
+      const tx = -0.55 + i*0.55;
+      const t = _add(g,_cyl(0, 0.4, 0.4, 4, roofC), tx, 1.0, 0);
+      t.rotation.y = Math.PI/4;
+      t.scale.set(1, 1, 1.5);
+    }
+    
+    // Tall classic smokestack
+    _add(g,_box(0.4, 0.4, 0.4, brick), 1.1, 0.2, -0.6);
+    _add(g,_cyl(0.1, 0.15, 1.8, 8, brick), 1.1, 1.3, -0.6);
+    _add(g,_cyl(0.12, 0.12, 0.1, 8, 0x1c1917), 1.1, 2.2, -0.6); // top rim
+    
+    // Tall Arched windows on front
+    for(let i=0; i<3; i++) {
+      const wx = -0.55 + i*0.55;
+      win(wx, 0.35, 0.6, 0.2, 0.5, 'z', glassC, gOpt);
+      // Arch top above the window
+      const arch = _add(g,_cyl(0.14, 0.14, 0.05, 8, glassC, gOpt), wx, 0.64, 0.6);
+      arch.rotation.x = Math.PI/2;
+    }
+
   } else if(v===1){
-    _add(g,_box(1.65,.65,1.55,0x94a3b8),.0,.44,0);
-    [-0.5,0,.5].forEach(z=>{
-      _add(g,new THREE.Mesh(new THREE.CylinderGeometry(.26,.26,1.65,3),bMat),0,.88,z).rotation.z=Math.PI/2;
-    });
-    _add(g,_box(.5,.5,.38,0x64748b),.65,.37,-.55);// loading dock
+    // ── Variant 1: Modern Tech Manufacturing ──
+    const wallC=0xe2e8f0;
+    const trimC=0x2563eb;
+    const glassC=0xbae6fd;
+    const gOpt={win:true,em:0x38bdf8,ei:0,sh:150};
+    
+    _add(g,_box(1.6, 0.6, 1.6, wallC), 0, 0.3, 0);
+    _add(g,_box(1.7, 0.05, 1.7, trimC), 0, 0.625, 0); // blue corporate trim ring
+    _add(g,_box(1.2, 0.4, 1.2, wallC), -0.2, 0.8, -0.2); // second tier office
+    
+    // Glass corner office wrap
+    win(0.5, 0.4, 0.8, 0.2, 0.4, 'z', glassC, gOpt);
+    win(0.8, 0.4, 0.5, 0.2, 0.4, 'x', glassC, gOpt);
+    
+    // Large loading dock shutter (yellow)
+    _add(g,_box(0.6, 0.4, 0.02, 0xfacc15, {shadow:false}), -0.4, 0.2, 0.81);
+    for(let i=0; i<8; i++) {
+      _add(g,_box(0.6, 0.01, 0.04, 0xca8a04, {shadow:false}), -0.4, 0.05 + i*0.05, 0.81);
+    }
+    
+    // Modern smooth white silo attached
+    _add(g,_cyl(0.3, 0.3, 1.2, 12, 0xf8fafc), 1.0, 0.6, -0.4);
+    _add(g,_cyl(0.3, 0.3, 0.1, 12, trimC), 1.0, 1.25, -0.4); // trim on silo
+
   } else {
-    _add(g,_box(1.85,.22,1.4,bMat.color),0,.22,0);
-    [-0.5,.5].forEach(cx=>{
-      _add(g,_cyl(.38,.38,.7,8,0xe2e8f0,{sh:60}),cx,.65,0);// tanks
-      _add(g,_cyl(.04,.04,.5,4,0xf59e0b),0,.46,cx*0.65).rotation.z=Math.PI/2;// pipe
-    });
-    _add(g,_box(.1,.5,.1,0x475569),0,.57,-.65);// vent
-    _add(g,_cyl(.04,.04,.22,5,0x6ee7b7,{em:0x34d399,ei:.5}),0,.8,-.65);// green light
+    // ── Variant 2: Heavy Industrial Plant ──
+    const metalC=0x475569;
+    const rustC=0x9a3412;
+    
+    _add(g,_box(1.6, 0.4, 1.4, 0x334155), 0, 0.2, 0); // dark base
+    
+    // Two massive spherical/cylindrical tanks
+    _add(g,_cyl(0.4, 0.4, 1.0, 12, metalC), -0.4, 0.7, 0);
+    _add(g,_cyl(0.4, 0.4, 1.0, 12, metalC), 0.4, 0.7, 0);
+    // Tank domes (cones)
+    _add(g,_cyl(0, 0.4, 0.2, 12, metalC), -0.4, 1.3, 0);
+    _add(g,_cyl(0, 0.4, 0.2, 12, metalC), 0.4, 1.3, 0);
+    
+    // Catwalk bridge between them
+    _add(g,_box(0.4, 0.02, 0.2, rustC), 0, 1.1, 0);
+    // Simple railings
+    _add(g,_box(0.4, 0.1, 0.02, rustC), 0, 1.15, 0.1);
+    _add(g,_box(0.4, 0.1, 0.02, rustC), 0, 1.15, -0.1);
+    
+    // Pipes winding around
+    _add(g,_cyl(0.05, 0.05, 1.4, 6, rustC), -0.85, 0.7, 0.2, Math.PI/2); // rx
+    _add(g,_cyl(0.05, 0.05, 0.8, 6, rustC), -0.45, 1.45, 0.2, 0, 0, Math.PI/2); // rz
+    _add(g,_cyl(0.05, 0.05, 0.8, 6, rustC), 0.45, 1.45, 0.2, 0, 0, Math.PI/2); // rz
+    
+    // Flare vent stack (tall skinny pipe)
+    _add(g,_cyl(0.06, 0.06, 1.8, 6, 0x1e293b), 0, 0.9, -0.5);
+    // Flare flame (glows bright orange)
+    _add(g,_cyl(0.08, 0.02, 0.2, 4, 0xffedd5, {lamp:true, em:0xf97316, ei:1.5}), 0, 1.9, -0.5);
+    
+    // Some small glowing control panels
+    _add(g,_box(0.1, 0.1, 0.02, 0x10b981, {em:0x059669, ei:1.0}), -0.4, 0.2, 0.71);
   }
   return optimizeBuildingGroup(g);
 }
