@@ -71,11 +71,18 @@ function _addLampPost(g, x, z, rotY) {
   lens.userData.isLamp = true;
   lampGroup.add(lens);
 
-  // ── Real point light ──
-  const ptLight = new THREE.PointLight(0xffcc66, 0, 3.5, 2);
-  ptLight.position.set(0, 1.85, 0.38);
-  ptLight.userData.isLampLight = true;
-  lampGroup.add(ptLight);
+  // ── Fake point light (Performance optimization) ──
+  // Hundreds of real PointLights cause severe WebGL lag. We use a glowing ground decal instead.
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: 0xffcc66,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false
+  });
+  const glow = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.02, 12), glowMat);
+  glow.position.set(0, 0.02, 0.38);
+  glow.userData.isLampLight = true;
+  lampGroup.add(glow);
 
   g.add(lampGroup);
 }

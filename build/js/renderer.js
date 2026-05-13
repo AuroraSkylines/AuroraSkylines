@@ -94,6 +94,9 @@ function updateWindowGlow(phase) {
     if (obj.isMesh && obj.userData.isLamp) {
       obj.material.emissiveIntensity = lampIntensity * 2.5;
     }
+    if (obj.isMesh && obj.userData.isLampLight) {
+      obj.material.opacity = lampIntensity * 0.6;
+    }
     // Drive the real PointLight for each lamp post
     if (obj.isLight && obj.userData.isLampLight) {
       obj.intensity = lampIntensity * 1.8;
