@@ -25,38 +25,40 @@ function _addBox(g, x, y, z, w, h, d, mat) {
 }
 
 function _addLampPost(g, x, z, rotY) {
-  const arm_reach = 0.45;
-  const arm_dx = Math.sin(rotY) * arm_reach;
-  const arm_dz = Math.cos(rotY) * arm_reach;
+  const lampGroup = new THREE.Group();
+  lampGroup.position.set(x, 0, z);
+  lampGroup.rotation.y = rotY; // Rotate the entire assembly to face the road
 
-  // ── Pole (slender, tapered) ──
-  const pole = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.025, 0.045, 1.6, 6),
-    _roadMats.lampPole
-  );
-  pole.position.set(x, 0.92, z);
+  // ── Base ──
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, 0.2, 6), _roadMats.lampPole);
+  base.position.set(0, 0.1, 0);
+  base.castShadow = true;
+  lampGroup.add(base);
+
+  // ── Main Pole ──
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.04, 1.7, 6), _roadMats.lampPole);
+  pole.position.set(0, 0.95, 0);
   pole.castShadow = true;
-  g.add(pole);
+  lampGroup.add(pole);
 
-  // ── Curved neck (angled box connector) ──
-  const neck = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.022, 0.022, arm_reach, 5),
-    _roadMats.lampPole
-  );
-  neck.position.set(x + arm_dx * 0.5, 1.74, z + arm_dz * 0.5);
-  neck.rotation.z = Math.PI / 2;
-  neck.rotation.y = rotY;
-  g.add(neck);
+  // ── Angled Connector (45 degrees) ──
+  const angle = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.02, 0.2, 5), _roadMats.lampPole);
+  angle.position.set(0, 1.87, 0.07);
+  angle.rotation.x = Math.PI / 4;
+  lampGroup.add(angle);
 
-  // ── Lamp housing (flat disc lantern) ──
-  const housingTop = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.13, 0.13, 0.04, 8),
-    _roadMats.lampPole
-  );
-  housingTop.position.set(x + arm_dx, 1.73, z + arm_dz);
-  g.add(housingTop);
+  // ── Horizontal Arm ──
+  const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.015, 0.3, 5), _roadMats.lampPole);
+  arm.position.set(0, 1.94, 0.29);
+  arm.rotation.x = Math.PI / 2;
+  lampGroup.add(arm);
 
-  // ── Lens (glowing emissive panel, small and flat) ──
+  // ── Housing (Modern flat box) ──
+  const housing = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.03, 0.25), _roadMats.lampPole);
+  housing.position.set(0, 1.94, 0.38);
+  lampGroup.add(housing);
+
+  // ── Lens (Glowing underside) ──
   const lampMat = new THREE.MeshStandardMaterial({
     color: 0xfff0c0,
     emissive: 0xffcc66,
@@ -64,19 +66,18 @@ function _addLampPost(g, x, z, rotY) {
     roughness: 0.3,
     metalness: 0.1
   });
-  const lens = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.10, 0.10, 0.03, 8),
-    lampMat
-  );
-  lens.position.set(x + arm_dx, 1.70, z + arm_dz);
+  const lens = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.02, 0.23), lampMat);
+  lens.position.set(0, 1.93, 0.38);
   lens.userData.isLamp = true;
-  g.add(lens);
+  lampGroup.add(lens);
 
-  // ── Real point light – illuminates the ground below ──
+  // ── Real point light ──
   const ptLight = new THREE.PointLight(0xffcc66, 0, 3.5, 2);
-  ptLight.position.set(x + arm_dx, 1.65, z + arm_dz);
-  ptLight.userData.isLampLight = true;   // renderer will toggle intensity
-  g.add(ptLight);
+  ptLight.position.set(0, 1.85, 0.38);
+  ptLight.userData.isLampLight = true;
+  lampGroup.add(ptLight);
+
+  g.add(lampGroup);
 }
 
 function makeRoad(gx, gz) {
