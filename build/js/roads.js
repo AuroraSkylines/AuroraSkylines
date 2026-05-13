@@ -13,6 +13,8 @@ const _roadMats = {
   manhole:  new THREE.MeshPhongMaterial({ color: 0x3a3e48, flatShading: true, shininess: 25 }),
   lampPole: new THREE.MeshPhongMaterial({ color: 0x5a5e72, flatShading: true }),
   lampHead: new THREE.MeshPhongMaterial({ color: 0xffdd88, emissive: 0xffaa22, emissiveIntensity: 0.0, flatShading: true }),
+  lampLens: new THREE.MeshStandardMaterial({ color: 0xfff0c0, emissive: 0xffcc66, emissiveIntensity: 0.0, roughness: 0.3, metalness: 0.1 }),
+  lampGlow: new THREE.MeshBasicMaterial({ color: 0xffcc66, transparent: true, opacity: 0, depthWrite: false }),
 };
 
 function _addBox(g, x, y, z, w, h, d, mat) {
@@ -59,27 +61,14 @@ function _addLampPost(g, x, z, rotY) {
   lampGroup.add(housing);
 
   // ── Lens (Glowing underside) ──
-  const lampMat = new THREE.MeshStandardMaterial({
-    color: 0xfff0c0,
-    emissive: 0xffcc66,
-    emissiveIntensity: 0.0,   // controlled by renderer.js at night
-    roughness: 0.3,
-    metalness: 0.1
-  });
-  const lens = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.02, 0.23), lampMat);
+  const lens = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.02, 0.23), _roadMats.lampLens);
   lens.position.set(0, 1.93, 0.38);
   lens.userData.isLamp = true;
   lampGroup.add(lens);
 
   // ── Fake point light (Performance optimization) ──
   // Hundreds of real PointLights cause severe WebGL lag. We use a glowing ground decal instead.
-  const glowMat = new THREE.MeshBasicMaterial({
-    color: 0xffcc66,
-    transparent: true,
-    opacity: 0,
-    depthWrite: false
-  });
-  const glow = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.02, 12), glowMat);
+  const glow = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.02, 12), _roadMats.lampGlow);
   glow.position.set(0, 0.02, 0.38);
   glow.userData.isLampLight = true;
   lampGroup.add(glow);
