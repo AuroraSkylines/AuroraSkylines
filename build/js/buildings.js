@@ -46,8 +46,12 @@ function makeHouse(gx,gz){
     const roof=_cyl(0,.72,rh,4,roofC);roof.rotation.y=Math.PI/4;
     _add(g,roof,0,wallH+.12+rh/2-.04,0);
     _add(g,_box(.13,.38,.13,0x5c3d2e),0,wallH+.12+rh*.3,.28); // chimney
-    _add(g,_box(.22,.3,.06,0x5c3d2e,{shadow:false}),0,.26,.55); // door
-    _add(g,_box(.28,.22,.05,0xfff5cc,{win:true,em:0xffaa44,ei:0,sh:80}),.0,wallH*.6,.55); // window
+    _add(g,_box(.22,.3,.06,0x5c3d2e,{shadow:false}),0,.26,.55); // door (front)
+    _add(g,_box(.28,.22,.05,0xfff5cc,{win:true,em:0xffaa44,ei:0,sh:80}),.0,wallH*.6,.55); // window (front)
+    // Side window (+X face, always camera-visible)
+    _add(g,_box(.05,.22,.28,0xfff5cc,{win:true,em:0xffaa44,ei:0,sh:50}),.56,wallH*.6,0);
+    // Back window (-Z face, visible when building faces north toward camera)
+    _add(g,_box(.28,.22,.05,0xfff5cc,{win:true,em:0xffaa44,ei:0,sh:50}),0,wallH*.6,-.55);
     // garden fence posts
     for(let i=-1;i<=1;i+=2){
       _add(g,_box(.05,.24,.05,0xc8b89a),i*.38,.23,.74);
@@ -60,8 +64,12 @@ function makeHouse(gx,gz){
     const h=rnd(.8,1.1,gx,gz,2);
     _add(g,_box(1.25,h,1.1,wallC),0,h/2+.12,0);
     _add(g,_box(1.32,.12,1.17,0x1e293b),.0,h+.18,0); // parapet
-    _add(g,_box(.72,.36,.06,0xbae6fd,{win:true,em:0x0ea5e9,ei:0,sh:120}),0,h*.5,.56); // big window
-    _add(g,_box(.22,.34,.06,0x222222,{shadow:false}),-.3,.28,.56); // door
+    _add(g,_box(.72,.36,.06,0xbae6fd,{win:true,em:0x0ea5e9,ei:0,sh:120}),0,h*.5,.56); // big window (front)
+    _add(g,_box(.22,.34,.06,0x222222,{shadow:false}),-.3,.28,.56); // door (front)
+    // Side window (+X face)
+    _add(g,_box(.05,.32,.5,0xbae6fd,{win:true,em:0x0ea5e9,ei:0,sh:60}),.64,h*.5,0);
+    // Back window (-Z face)
+    _add(g,_box(.5,.28,.06,0xbae6fd,{win:true,em:0x0ea5e9,ei:0,sh:60}),0,h*.5,-.56);
     // Garage
     _add(g,_box(.65,h*.7,.8,wallC),.48,h*.35+.12,-.08);
     _add(g,_box(.5,h*.58,.04,0xe2e8f0,{shadow:false}),.48,h*.29+.12,.36); // garage door
@@ -79,11 +87,16 @@ function makeHouse(gx,gz){
     // Porch pillars
     _add(g,_cyl(.04,.04,h*.8,5,0xd4d4d4),.15,h*.4+.12,.55);
     _add(g,_cyl(.04,.04,h*.8,5,0xd4d4d4),.52,h*.4+.12,.55);
-    _add(g,_box(.22,.28,.05,0x5c3d2e,{shadow:false}),.33,.24,.57); // door
-    _add(g,_box(.3,.2,.05,0xfff5cc,{win:true,em:0xffaa44,ei:0}),-.25,h*.55,.54); // window
+    _add(g,_box(.22,.28,.05,0x5c3d2e,{shadow:false}),.33,.24,.57); // door (front)
+    _add(g,_box(.3,.2,.05,0xfff5cc,{win:true,em:0xffaa44,ei:0}),-.25,h*.55,.54); // window (front)
+    // Side window (+X face)
+    _add(g,_box(.05,.2,.3,0xfff5cc,{win:true,em:0xffaa44,ei:0}),.72,h*.55,0);
+    // Back window (-Z face)
+    _add(g,_box(.3,.2,.05,0xfff5cc,{win:true,em:0xffaa44,ei:0}),-.05,h*.55,-.52);
   }
   return g;
 }
+
 
 // ── Apartment ─────────────────────────────────────
 function makeApartment(gx,gz){
