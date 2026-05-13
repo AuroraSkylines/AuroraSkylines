@@ -56,23 +56,25 @@ function makeHouse(gx,gz){
 
   // Helper: add a framed window at position, on a given face (axis='z' or axis='x')
   function win(x,y,z,wr,wh,axis){
-    const thick=0.05;
-    const fw=axis==='z'?wr+0.06:thick;
-    const fd=axis==='z'?thick:wr+0.06;
+    const fThick=0.06; // frame thickness
+    const gThick=0.04; // glass thickness (recessed to prevent z-fighting)
+    const fw=axis==='z'?wr+0.06:fThick;
+    const fd=axis==='z'?fThick:wr+0.06;
     // Frame (dark)
     _add(g,_box(fw,wh+0.06,fd,trimC,{shadow:false}),x,y,z);
     // Glass
-    const gw=axis==='z'?wr:thick;
-    const gd=axis==='z'?thick:wr;
+    const gw=axis==='z'?wr:gThick;
+    const gd=axis==='z'?gThick:wr;
     _add(g,_box(gw,wh,gd,winC,winOpt),x,y,z);
   }
   function winW(x,y,z,wr,wh,axis){ // warm glass
-    const thick=0.05;
-    const fw=axis==='z'?wr+0.06:thick;
-    const fd=axis==='z'?thick:wr+0.06;
+    const fThick=0.06;
+    const gThick=0.04;
+    const fw=axis==='z'?wr+0.06:fThick;
+    const fd=axis==='z'?fThick:wr+0.06;
     _add(g,_box(fw,wh+0.06,fd,trimC,{shadow:false}),x,y,z);
-    const gw=axis==='z'?wr:thick;
-    const gd=axis==='z'?thick:wr;
+    const gw=axis==='z'?wr:gThick;
+    const gd=axis==='z'?gThick:wr;
     _add(g,_box(gw,wh,gd,winC,winOptW),x,y,z);
   }
 
