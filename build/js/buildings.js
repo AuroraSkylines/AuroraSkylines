@@ -320,47 +320,41 @@ const FACTORIES={
 };
 
 function getRoadFacingAngle(gx, gz) {
-  // Camera is at (28,28,28). The TWO visible faces of any building are +Z and +X.
-  // Building front (door at z=+0.55) is on the +Z face.
-  // With rotation.y=0, front faces +Z → shows toward camera (correct for S-side road where road is below/south).
-  // We need the front to point TOWARD the road tile.
+  // Fixed camera at (28,28,28) only shows the +Z face (lower-left on screen)
+  // and +X face (lower-right on screen). The building front (door/windows) is at +Z.
   //
-  // After calibration with the isometric camera:
-  //   Road to SOUTH of building (gz+1): front should face south (+Z) → rotation 0
-  //   Road to NORTH (gz-1): front face north (-Z) → rotation PI
-  //   Road to EAST  (gx+1): front face east (+X) → rotation -PI/2
-  //   Road to WEST  (gx-1): front face west (-X) → rotation PI/2
-  //
-  // BUT the camera sits in the +X/+Z quadrant, so:
-  //   - A building facing SOUTH (rot=0) has its front visible to the camera
-  //   - A building facing NORTH (rot=PI) has its BACK visible → looks better next to northern road
-  //
-  // In practice: road to south → rot PI/2 (face toward camera from south)
-  //              road to north → rot -PI/2
-  //              road to east  → rot 0
-  //              road to west  → rot PI
-  // ... but this doesn't match math. Just use deterministic grid-seeded direction:
+  // rotation.y = 0      → front faces +Z = visible (lower-left). Use for E-W roads.
+  // rotation.y = -PI/2  → front faces +X = visible (lower-right). Use for N-S roads.
+  // rotation.y = PI     → front faces -Z = HIDDEN from camera. Never use.
+  // rotation.y = PI/2   → front faces -X = HIDDEN from camera. Never use.
 
   const N = state.grid[key(gx,   gz-1)]?.type === 'road';
   const S = state.grid[key(gx,   gz+1)]?.type === 'road';
   const E = state.grid[key(gx+1, gz  )]?.type === 'road';
   const W = state.grid[key(gx-1, gz  )]?.type === 'road';
 
-  // Single road: face it
-  if (S && !N && !E && !W) return Math.PI / 2;
-  if (N && !S && !E && !W) return -Math.PI / 2;
-  if (E && !N && !S && !W) return 0;
-  if (W && !N && !S && !E) return Math.PI;
+  const hasEW = S || N;  // Road runs east-west (north or south of building)
+  const hasNS = E || W;  // Road runs north-south (east or west of building)
 
-  // Multiple: prefer non-opposing
-  if (S && !N) return Math.PI / 2;
-  if (N && !S) return -Math.PI / 2;
-  if (E && !W) return 0;
-  if (W && !E) return Math.PI;
+  // Single-sided road — choose the appropriate camera-facing orientation
+  if (hasEW && !hasNS) return 0;           // E-W road: face south (+Z, lower-left)
+  if (hasNS && !hasEW) return -Math.PI/2;  // N-S road: face east (+X, lower-right)
 
-  // Fallback: seeded stable
-  const pick = Math.floor(seededRandom(gx, gz, 98) * 4);
-  return [Math.PI/2, -Math.PI/2, 0, Math.PI][pick];
+  // Corner/intersection: prefer E-W facing (south-facing = most common "front" look)
+  if (hasEW) return 0;
+  if (hasNS) return -Math.PI/2;
+
+  // No adjacent road — check 2 tiles out
+  const N2 = state.grid[key(gx,   gz-2)]?.type === 'road';
+  const S2 = state.grid[key(gx,   gz+2)]?.type === 'road';
+  const E2 = state.grid[key(gx+2, gz  )]?.type === 'road';
+  const W2 = state.grid[key(gx-2, gz  )]?.type === 'road';
+  if (S2 || N2) return 0;
+  if (E2 || W2) return -Math.PI/2;
+
+  // Stable seeded fallback — 50/50 between the two visible angles
+  return seededRandom(gx, gz, 99) > 0.5 ? 0 : -Math.PI/2;
 }
+
 
 
