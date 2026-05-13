@@ -225,55 +225,156 @@ function makeHouse(gx,gz){
 function makeApartment(gx,gz){
   const g=new THREE.Group();
   const v=Math.floor(rnd(0,3,gx,gz,1));
-  const floors=3+Math.floor(rnd(0,5,gx,gz,2));
-  const fh=.52;
-  const cols=[0x3b82f6,0x22c55e,0xf97316,0x8b5cf6,0x0ea5e9,0x64748b];
-  const fc=cols[Math.floor(rnd(0,cols.length,gx,gz,3))];
-  const wm={win:true,em:0xfef3c7,ei:0,sh:100};
+  const floors=3+Math.floor(rnd(0,4,gx,gz,2));
+  const trimC=0x222222; 
+  
+  // Helpers
+  function win(x,y,z,wr,wh,axis,glassC,glassOpt){
+    const fThick=0.06;
+    const gThick=0.04;
+    const fw=axis==='z'?wr+0.06:fThick;
+    const fd=axis==='z'?fThick:wr+0.06;
+    _add(g,_box(fw,wh+0.06,fd,trimC,{shadow:false}),x,y,z);
+    const gw=axis==='z'?wr:gThick;
+    const gd=axis==='z'?gThick:wr;
+    _add(g,_box(gw,wh,gd,glassC,glassOpt),x,y,z);
+  }
 
   if(v===0){
-    // Art-deco stepped tower
-    const bh=floors*fh;
-    _add(g,_box(1.3,bh,1.2,fc),0,bh/2+.12,0);
-    _add(g,_box(1.0,fh*.8,.9,fc),0,bh+.12+fh*.4,0);
-    _add(g,_box(.6,fh*.6,.5,fc),0,bh+fh*.8+.12+fh*.3,0);
+    // ── Variant 0: High-End Glass Skyscraper ──
+    const h=floors*0.6;
+    const baseC=0x1e293b;
+    const glassC=0x38bdf8;
+    const gOpt={win:true,em:0x0ea5e9,ei:0,sh:150};
+    
+    // Lobby
+    _add(g,_box(1.3,0.4,1.3,baseC),0,0.2,0);
+    // Lobby entrance
+    _add(g,_box(0.5,0.3,0.05,0xd1d5db,{shadow:false}),0,0.15,0.66); // awning
+    _add(g,_box(0.4,0.3,0.06,glassC,gOpt),0,0.15,0.65); // doors
+    
+    // Tower core
+    _add(g,_box(1.0,h,1.0,0x0f172a),0,0.4+h/2,0);
+    
+    // Floor plates and glass facades
     for(let f=0;f<floors;f++){
-      [-1,0,1].forEach(s=>{
-        const w=_box(.2,.22,.05,0xfef3c7,wm);
-        _add(g,w,s*.38,.12+f*fh+.26,.63);
+      const fy = 0.4 + f*0.6 + 0.3;
+      // Metal floor band
+      _add(g,_box(1.05,0.06,1.05,0x475569),0,fy+0.27,0);
+      // Continuous glass on all 4 sides
+      [-0.51, 0.51].forEach(pos => {
+        _add(g,_box(0.9, 0.45, 0.05, glassC, gOpt), 0, fy, pos); // Z faces
+        _add(g,_box(0.05, 0.45, 0.9, glassC, gOpt), pos, fy, 0); // X faces
       });
     }
-    // Rooftop
-    _add(g,_box(1.38,.12,1.28,0x1e293b),0,bh+.18,0);
-    _add(g,_cyl(.08,.12,.3,8,0x64748b),-.3,bh+.27,.3);// water tower
-    _add(g,_cyl(.16,.16,.18,5,0x475569),.25,bh+.21,-.2);// AC
+    
+    // Roof
+    const roofY = 0.4 + h;
+    _add(g,_box(1.05,0.1,1.05,baseC),0,roofY+0.05,0);
+    // Helipad
+    _add(g,_cyl(0.3,0.3,0.02,12,0x333333),0,roofY+0.12,0);
+    _add(g,_box(0.2,0.01,0.04,0xeab308,{shadow:false}),0,roofY+0.13,0); // H
+    _add(g,_box(0.04,0.01,0.2,0xeab308,{shadow:false}),-0.08,roofY+0.13,0);
+    _add(g,_box(0.04,0.01,0.2,0xeab308,{shadow:false}),0.08,roofY+0.13,0);
+    // Antenna
+    _add(g,_cyl(0.02,0.04,0.6,4,0x94a3b8),0.3,roofY+0.4,-0.3);
+    _add(g,_cyl(0.04,0.04,0.04,5,0xff0000,{lamp:true,em:0xff0000,ei:0.8}),0.3,roofY+0.7,-0.3); // warning light
+
   } else if(v===1){
-    // Slim modern tower with balconies
-    const bh=floors*fh;
-    _add(g,_box(1.0,bh,.95,fc),0,bh/2+.12,0);
+    // ── Variant 1: Classic Brick Tenement ──
+    const h=floors*0.55;
+    const bCols=[0x8b3a3a,0x9c5a3c,0x733c3c];
+    const wallC=bCols[Math.floor(rnd(0,bCols.length,gx,gz,5))];
+    const glassC=0xbae6fd;
+    const gOpt={win:true,em:0x38bdf8,ei:0,sh:80};
+    
+    // Stone foundation
+    _add(g,_box(1.25,0.2,1.25,0x57534e),0,0.1,0);
+    // Main brick body
+    _add(g,_box(1.2,h,1.2,wallC),0,0.2+h/2,0);
+    
+    // Front door and stairs
+    _add(g,_box(0.3,0.05,0.2,0x78716c,{shadow:false}),0,0.05,0.68);
+    _add(g,_box(0.2,0.3,0.05,0x292524,{shadow:false}),0,0.25,0.6);
+    // Awning
+    const awn = _add(g,_box(0.4,0.05,0.3,0x15803d),0,0.45,0.7);
+    awn.rotation.x = -0.15;
+    
+    // Punched windows on all 4 faces
     for(let f=0;f<floors;f++){
-      // Balcony slab
-      _add(g,_box(1.1,.06,.32,0xf1f5f9),0,.12+f*fh+.46,.66);
-      // Windows
-      const w=_box(.7,.32,.05,0xbae6fd,{win:true,em:0x0ea5e9,ei:0,sh:120});
-      _add(g,w,0,.12+f*fh+.26,.5);
-    }
-    _add(g,_box(1.08,.12,1.03,0x0f172a),0,bh+.18,0);
-    _add(g,_cyl(.05,.05,.45,4,0xf1f5f9),0,bh+.4,0);// antenna
-  } else {
-    // Brutalist block
-    const bh=floors*fh;
-    _add(g,_box(1.5,bh,1.15,0xc8c8c4),0,bh/2+.12,0);
-    for(let f=0;f<floors;f++){
-      [-1,1].forEach(s=>{
-        // Balcony
-        _add(g,_box(.6,.08,.38,0xb0b0ac,{shadow:false}),s*.45,.12+f*fh+.44,s>.0?.58:-.58);
-        const w=_box(.35,.28,.05,0xfef3c7,wm);
-        _add(g,w,s*.45,.12+f*fh+.28,s>0?.58:-.58);
+      const fy = 0.2 + f*0.55 + 0.3;
+      // Front and back (+Z, -Z)
+      [-0.35, 0, 0.35].forEach(wx => {
+        win(wx,fy,0.6, 0.16, 0.22, 'z', glassC, gOpt);
+        win(wx,fy,-0.6, 0.16, 0.22, 'z', glassC, gOpt);
+      });
+      // Sides (+X, -X)
+      [-0.35, 0, 0.35].forEach(wz => {
+        win(0.6,fy,wz, 0.16, 0.22, 'x', glassC, gOpt);
+        win(-0.6,fy,wz, 0.16, 0.22, 'x', glassC, gOpt);
       });
     }
-    _add(g,_box(1.6,.22,1.25,0xa0a09c),0,bh+.23,0);// rooftop plant
-    _add(g,_box(.5,.4,.5,0x888884),.4,bh+.32,-.3);// stairwell box
+    
+    // Roof details
+    const roofY = 0.2 + h;
+    _add(g,_box(1.25,0.1,1.25,trimC),0,roofY+0.05,0); // parapet
+    _add(g,_box(1.15,0.02,1.15,0x444444),0,roofY+0.1,0); // flat roof
+    // Water tower (wood on legs)
+    _add(g,_box(0.4,0.3,0.4,0x444444),-0.3,roofY+0.25,0.3); // stairbox
+    _add(g,_cyl(0.18,0.18,0.25,8,0x78350f),0.3,roofY+0.35,-0.3); // tank
+    _add(g,_cyl(0.2,0.2,0.04,8,0x3f3f46),0.3,roofY+0.48,-0.3); // tank lid
+    // Legs
+    [-1,1].forEach(lx=>[-1,1].forEach(lz=>_add(g,_cyl(0.02,0.02,0.2,4,0x000000),0.3+lx*0.12,roofY+0.2,-0.3+lz*0.12)));
+
+  } else {
+    // ── Variant 2: Luxury Stepped Condo ──
+    const wallC=0xf8fafc; // pure white / modern cream
+    const glassC=0x7dd3fc;
+    const gOpt={win:true,em:0x0ea5e9,ei:0,sh:120};
+    
+    // Base floor (widest)
+    _add(g,_box(1.4,0.5,1.4,wallC),0,0.25,0);
+    // Base windows
+    win(0,0.25,0.7,0.8,0.3,'z',glassC,gOpt);
+    win(0,0.25,-0.7,0.8,0.3,'z',glassC,gOpt);
+    win(0.7,0.25,0,0.8,0.3,'x',glassC,gOpt);
+    win(-0.7,0.25,0,0.8,0.3,'x',glassC,gOpt);
+    
+    let curW = 1.2;
+    let curY = 0.5;
+    
+    // Stepped floors
+    for(let f=0;f<floors;f++){
+      const fh = 0.5;
+      _add(g,_box(curW,fh,curW,wallC),0,curY+fh/2,0);
+      
+      // Balcony / Terrace floor outside the new block
+      _add(g,_box(curW+0.2,0.05,curW+0.2,0xcbd5e1),0,curY+0.025,0);
+      
+      // Plants on terraces
+      _add(g,_box(curW,0.08,0.1,0x22c55e,{shadow:false}),0,curY+0.08,curW/2+0.05); // front planter
+      _add(g,_box(0.1,0.08,curW,0x22c55e,{shadow:false}),curW/2+0.05,curY+0.08,0); // right planter
+      
+      // Glass railings
+      _add(g,_box(curW+0.2,0.15,0.02,0xbae6fd,{transparent:true,opacity:0.6}),0,curY+0.1,curW/2+0.09);
+      _add(g,_box(curW+0.2,0.15,0.02,0xbae6fd,{transparent:true,opacity:0.6}),0,curY+0.1,-curW/2-0.09);
+      _add(g,_box(0.02,0.15,curW+0.2,0xbae6fd,{transparent:true,opacity:0.6}),curW/2+0.09,curY+0.1,0);
+      _add(g,_box(0.02,0.15,curW+0.2,0xbae6fd,{transparent:true,opacity:0.6}),-curW/2-0.09,curY+0.1,0);
+
+      // Huge floor-to-ceiling windows
+      const wSize = curW*0.6;
+      win(0,curY+fh/2,curW/2,wSize,0.35,'z',glassC,gOpt);
+      win(0,curY+fh/2,-curW/2,wSize,0.35,'z',glassC,gOpt);
+      win(curW/2,curY+fh/2,0,wSize,0.35,'x',glassC,gOpt);
+      win(-curW/2,curY+fh/2,0,wSize,0.35,'x',glassC,gOpt);
+      
+      curY += fh;
+      curW -= 0.15; // get narrower
+    }
+    
+    // Roof pool
+    _add(g,_box(curW+0.1,0.06,curW+0.1,0x94a3b8),0,curY+0.03,0);
+    _add(g,_box(curW*0.6,0.02,curW*0.6,0x38bdf8,{em:0x0ea5e9,ei:0.2}),0,curY+0.07,0); // pool water
   }
   return g;
 }
