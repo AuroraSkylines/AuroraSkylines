@@ -34,65 +34,186 @@ function rnd(a,b,gx,gz,s){return a+seededRandom(gx,gz,s)*(b-a);}
 function makeHouse(gx,gz){
   const g=new THREE.Group();
   const v=Math.floor(rnd(0,3,gx,gz,1));
-  const wallH=rnd(.55,.7,gx,gz,2);
-  const wallC=new THREE.Color().setHSL(rnd(.04,.14,gx,gz,3),.42,.68);
-  const roofC=new THREE.Color().setHSL(rnd(0,.08,gx,gz,4),.55,.32);
-  const acC=0x94a3b8;
+
+  // Curated colour palettes per variant — warm, inviting tones
+  const wallPalettes=[
+    [0xf5e6d0,0xecd5b0,0xfaedd8,0xe8d5b7], // warm cream/sand
+    [0xdde8f0,0xccd9e8,0xe2ecf5,0xc8d8e8], // cool slate blue
+    [0xe8d8d0,0xf0e0d8,0xddd0c8,0xf8e8e0], // dusty rose/mauve
+  ];
+  const roofPalettes=[
+    [0x8b4513,0x6b3410,0xa0522d,0x7a3c1a], // warm terracotta/brown
+    [0x374151,0x2d3748,0x4a5568,0x1a202c], // dark slate
+    [0x5c4033,0x4a3028,0x6b4c3b,0x3d2b22], // deep mahogany
+  ];
+  const pi=Math.floor(rnd(0,wallPalettes[v].length,gx,gz,8));
+  const wallC=wallPalettes[v][pi];
+  const roofC=roofPalettes[v][Math.floor(rnd(0,roofPalettes[v].length,gx,gz,9))];
+  const trimC=0x2d2d2d; // dark trim / window frames
+  const winC=0xb8d4e8;  // window glass (light blue)
+  const winOpt={win:true,em:0x88bbdd,ei:0,sh:120};
+  const winOptW={win:true,em:0xffcc88,ei:0,sh:80}; // warm glass variant
+
+  // Helper: add a framed window at position, on a given face (axis='z' or axis='x')
+  function win(x,y,z,wr,wh,axis){
+    const thick=0.05;
+    const fw=axis==='z'?wr+0.06:thick;
+    const fd=axis==='z'?thick:wr+0.06;
+    // Frame (dark)
+    _add(g,_box(fw,wh+0.06,fd,trimC,{shadow:false}),x,y,z);
+    // Glass
+    const gw=axis==='z'?wr:thick;
+    const gd=axis==='z'?thick:wr;
+    _add(g,_box(gw,wh,gd,winC,winOpt),x,y,z);
+  }
+  function winW(x,y,z,wr,wh,axis){ // warm glass
+    const thick=0.05;
+    const fw=axis==='z'?wr+0.06:thick;
+    const fd=axis==='z'?thick:wr+0.06;
+    _add(g,_box(fw,wh+0.06,fd,trimC,{shadow:false}),x,y,z);
+    const gw=axis==='z'?wr:thick;
+    const gd=axis==='z'?thick:wr;
+    _add(g,_box(gw,wh,gd,winC,winOptW),x,y,z);
+  }
 
   if(v===0){
-    // Classic cottage with peaked roof
-    _add(g,_box(1.1,wallH,1.05,wallC),0,wallH/2+.12,0);
-    const rh=rnd(.45,.65,gx,gz,5);
-    const roof=_cyl(0,.72,rh,4,roofC);roof.rotation.y=Math.PI/4;
-    _add(g,roof,0,wallH+.12+rh/2-.04,0);
-    _add(g,_box(.13,.38,.13,0x5c3d2e),0,wallH+.12+rh*.3,.28); // chimney
-    _add(g,_box(.22,.3,.06,0x5c3d2e,{shadow:false}),0,.26,.55); // door (front)
-    _add(g,_box(.28,.22,.05,0xfff5cc,{win:true,em:0xffaa44,ei:0,sh:80}),.0,wallH*.6,.55); // window (front)
-    // Side window (+X face, always camera-visible)
-    _add(g,_box(.05,.22,.28,0xfff5cc,{win:true,em:0xffaa44,ei:0,sh:50}),.56,wallH*.6,0);
-    // Back window (-Z face, visible when building faces north toward camera)
-    _add(g,_box(.28,.22,.05,0xfff5cc,{win:true,em:0xffaa44,ei:0,sh:50}),0,wallH*.6,-.55);
-    // garden fence posts
-    for(let i=-1;i<=1;i+=2){
-      _add(g,_box(.05,.24,.05,0xc8b89a),i*.38,.23,.74);
-      _add(g,_box(.05,.24,.05,0xc8b89a),i*.38,.23,.55);
-    }
-    _add(g,_box(.82,.04,.06,0xc8b89a),0,.28,.74); // fence rail
-    _add(g,_box(.12,.02,.36,0x94a3b8,{shadow:false}),0,.13,.7); // path
+    // ── Variant 0: Craftsman Cottage ──────────────────────────
+    // Warm cream walls, terracotta roof, wide overhanging eaves, stone foundation
+    const wH=rnd(.62,.78,gx,gz,2);
+    const rH=rnd(.38,.52,gx,gz,5);
+
+    // Stone foundation strip
+    _add(g,_box(1.18,.1,1.12,0x8a8070),0,.06,0);
+    // Main walls
+    _add(g,_box(1.1,wH,1.05,wallC),0,wH/2+.12,0);
+
+    // Wide hip roof with overhanging eaves (layered for depth)
+    _add(g,_box(1.28,.08,1.22,roofC),0,wH+.12,0);           // eave slab
+    const roof=_cyl(0,.75,rH,4,roofC); roof.rotation.y=Math.PI/4;
+    _add(g,roof,0,wH+.16+rH/2,0);
+    // Chimney (offset to side)
+    _add(g,_box(.11,.42,.11,0x786050),-.28,wH+.12+rH*.35,.12);
+    _add(g,_box(.14,.04,.14,0x5a4030),-.28,wH+.12+rH*.35+.21,.12); // cap
+
+    // Front face (+Z)
+    _add(g,_box(.18,.36,.05,trimC,{shadow:false}),0,.26+.12,.55);  // door frame
+    _add(g,_box(.14,.3,.04,0x4a3520,{shadow:false}),0,.26+.12,.56); // door panel
+    _add(g,_box(.03,.04,.04,0xd4a800,{shadow:false}),.05,.24+.12,.57); // door knob
+    winW(.3,wH*.62,.55,.26,.2,'z');    // right window front
+    winW(-.3,wH*.62,.55,.26,.2,'z');   // left window front
+    // Flower box under front windows
+    _add(g,_box(.62,.06,.1,0x8b5e3c,{shadow:false}),0,wH*.62-.14,.55);
+    _add(g,_box(.58,.05,.09,0x6ab04c,{shadow:false}),0,wH*.62-.1,.55); // greenery
+
+    // Side face (+X - always visible from camera)
+    win(.55,wH*.6,.0,.28,.22,'x');
+    win(.55,wH*.6,-.3,.2,.18,'x');
+
+    // Back face (-Z - visible when facing north/camera)
+    winW(-.25,wH*.62,-.55,.22,.18,'z');
+    winW(.25,wH*.62,-.55,.22,.18,'z');
+
+    // Front porch step
+    _add(g,_box(.52,.05,.16,0xa09080,{shadow:false}),0,.05,.6);
+    // Small garden path
+    _add(g,_box(.14,.01,.38,0xb0a090,{shadow:false}),0,.13,.82);
+    // Two bushes flanking door
+    _add(g,_cyl(.1,.12,.18,5,0x3d8b2a),-.22,.21,.62);
+    _add(g,_cyl(.1,.12,.18,5,0x3d8b2a),.22,.21,.62);
+
   } else if(v===1){
-    // Modern flat-roof townhouse
-    const h=rnd(.8,1.1,gx,gz,2);
-    _add(g,_box(1.25,h,1.1,wallC),0,h/2+.12,0);
-    _add(g,_box(1.32,.12,1.17,0x1e293b),.0,h+.18,0); // parapet
-    _add(g,_box(.72,.36,.06,0xbae6fd,{win:true,em:0x0ea5e9,ei:0,sh:120}),0,h*.5,.56); // big window (front)
-    _add(g,_box(.22,.34,.06,0x222222,{shadow:false}),-.3,.28,.56); // door (front)
-    // Side window (+X face)
-    _add(g,_box(.05,.32,.5,0xbae6fd,{win:true,em:0x0ea5e9,ei:0,sh:60}),.64,h*.5,0);
-    // Back window (-Z face)
-    _add(g,_box(.5,.28,.06,0xbae6fd,{win:true,em:0x0ea5e9,ei:0,sh:60}),0,h*.5,-.56);
-    // Garage
-    _add(g,_box(.65,h*.7,.8,wallC),.48,h*.35+.12,-.08);
-    _add(g,_box(.5,h*.58,.04,0xe2e8f0,{shadow:false}),.48,h*.29+.12,.36); // garage door
-    _add(g,_box(.4,.06,.4,acC),0,h+.28,-.2); // rooftop AC
+    // ── Variant 1: Modern Suburban ────────────────────────────
+    // Clean lines, dark slate roof, big windows, attached garage, slight L-shape
+    const h=rnd(.78,1.0,gx,gz,2);
+    const gH=h*.68; // garage height
+
+    // Main body
+    _add(g,_box(1.1,h,1.0,wallC),-.08,h/2+.1,0);
+    // Roof with slight overhang
+    _add(g,_box(1.18,.07,1.08,roofC),-.08,h+.135,0);   // flat top
+    const rSlope=_cyl(0,.82,rnd(.3,.44,gx,gz,5),4,roofC);
+    rSlope.rotation.y=Math.PI/4;
+    _add(g,rSlope,-.08,h+.17+rnd(.15,.22,gx,gz,5)/2,0);
+    // Dark parapet accent
+    _add(g,_box(1.2,.08,1.1,trimC),-.08,h+.1,0);
+
+    // Attached garage (protruding slightly)
+    _add(g,_box(.7,gH,.8,new THREE.Color(wallC).offsetHSL(0,0,-.06)),.48,gH/2+.1,-.04);
+    _add(g,_box(.76,.05,.85,roofC),.48,gH+.12,-.04); // garage roof
+    // Garage door (panelled)
+    _add(g,_box(.54,gH*.76,.04,0xe0e0e0,{shadow:false}),.48,gH*.38+.1,.4);
+    for(let i=0;i<3;i++) _add(g,_box(.52,.04,.04,0xcccccc,{shadow:false}),.48,gH*.2+i*gH*.22+.1,.41);
+
+    // Front face (+Z): large picture window + door
+    _add(g,_box(.32,.42,.05,trimC,{shadow:false}),-.28,.34+.1,.52);
+    _add(g,_box(.28,.38,.04,0x3a2a1a,{shadow:false}),-.28,.34+.1,.53); // door
+    _add(g,_box(.03,.06,.04,0xd4a800,{shadow:false}),-.14,.3+.1,.54); // knob
+    win(.22,h*.56,.51,.44,.3,'z');   // picture window front
+    // Side face (+X)
+    win(.56,h*.55,.15,.3,.24,'x');
+    win(.56,h*.55,-.25,.24,.2,'x');
+    // Back face (-Z)
+    win(-.08,h*.55,-.51,.46,.28,'z');
+    win(-.08,h*.55,-.51,.46,.28,'z');
+
+    // Small deck/patio front
+    _add(g,_box(.8,.06,.3,0xb08040,{shadow:false}),-.18,.08,.64);
+    // Deck railing posts
+    for(let i=-1;i<=1;i++) _add(g,_box(.03,.12,.03,0x9a7030),i*.3,.14,.78);
+    _add(g,_box(.68,.03,.03,0x9a7030),-.18,.2,.78); // top rail
+    // Shrubs
+    _add(g,_cyl(.08,.1,.16,6,0x2d7a22),.3,.16,.62);
+    _add(g,_cyl(.1,.13,.2,6,0x2d7a22),-.42,.18,.62);
+
   } else {
-    // Bungalow with porch
+    // ── Variant 2: Nordic Chalet ──────────────────────────────
+    // Steep A-frame inspired, warm wood tones, prominent overhangs
     const h=rnd(.6,.75,gx,gz,2);
-    _add(g,_box(1.4,h,1.0,wallC),-.05,h/2+.12,0);
-    // Hip roof (layered boxes)
-    _add(g,_box(1.5,.16,1.1,roofC),-.05,h+.20,0);
-    _add(g,_box(1.2,.14,.8,roofC),-.05,h+.34,0);
-    _add(g,_box(.7,.12,.4,roofC),-.05,h+.46,0);
-    // Porch slab
-    _add(g,_box(.9,.08,.5,0x94a3b8,{shadow:false}),.35,.13,.55);
-    // Porch pillars
-    _add(g,_cyl(.04,.04,h*.8,5,0xd4d4d4),.15,h*.4+.12,.55);
-    _add(g,_cyl(.04,.04,h*.8,5,0xd4d4d4),.52,h*.4+.12,.55);
-    _add(g,_box(.22,.28,.05,0x5c3d2e,{shadow:false}),.33,.24,.57); // door (front)
-    _add(g,_box(.3,.2,.05,0xfff5cc,{win:true,em:0xffaa44,ei:0}),-.25,h*.55,.54); // window (front)
-    // Side window (+X face)
-    _add(g,_box(.05,.2,.3,0xfff5cc,{win:true,em:0xffaa44,ei:0}),.72,h*.55,0);
-    // Back window (-Z face)
-    _add(g,_box(.3,.2,.05,0xfff5cc,{win:true,em:0xffaa44,ei:0}),-.05,h*.55,-.52);
+    const rH=rnd(.55,.72,gx,gz,5); // tall steep roof
+
+    // Foundation
+    _add(g,_box(1.24,.12,1.18,0x706050),0,.06,0);
+    // Main walls (shorter — roof is dominant)
+    _add(g,_box(1.1,h,.95,wallC),0,h/2+.12,0);
+
+    // Steep 4-sided hip roof with wide eaves
+    _add(g,_box(1.3,.1,1.16,roofC),0,h+.12,0);        // wide eave slab
+    _add(g,_box(1.32,.06,1.18,new THREE.Color(roofC).offsetHSL(0,0,.04)),0,h+.14,0); // lighter trim
+    const roof=_cyl(0,.78,rH,4,roofC); roof.rotation.y=Math.PI/4;
+    _add(g,roof,0,h+.18+rH/2,0);
+
+    // Chimney (stone look)
+    _add(g,_box(.16,.5,.16,0x786050),.3,h+.18+rH*.28,-.12);
+    _add(g,_box(.19,.05,.19,0x5a4030),.3,h+.18+rH*.28+.25,-.12);
+
+    // Front (+Z): arched/gabled window + door
+    _add(g,_box(.2,.38,.05,trimC,{shadow:false}),0,.26+.12,.49);   // door frame
+    _add(g,_box(.16,.34,.04,0x5c3d2e,{shadow:false}),0,.26+.12,.5);// door
+    _add(g,_box(.06,.06,.06,0xd4a800,{shadow:false}),.06,.28+.12,.51); // knob
+    winW(-.3,h*.62,.49,.22,.2,'z');
+    winW(.3,h*.62,.49,.22,.2,'z');
+    // Gable window (triangular hint - small square at peak of front)
+    _add(g,_box(.2,.14,.04,winC,winOpt),0,h+.12+rH*.48,.52);
+    _add(g,_box(.22,.04,.05,trimC,{shadow:false}),0,h+.12+rH*.55,.52);
+
+    // Side face (+X)
+    win(.56,h*.58,.15,.28,.22,'x');
+    win(.56,h*.58,-.22,.22,.18,'x');
+
+    // Back face (-Z)
+    winW(-.28,h*.62,-.49,.22,.2,'z');
+    winW(.28,h*.62,-.49,.22,.2,'z');
+
+    // Front step
+    _add(g,_box(.42,.06,.2,0x908070,{shadow:false}),0,.1,.56);
+    // Wood porch (front)
+    _add(g,_box(.9,.05,.45,0x8b6914,{shadow:false}),0,.12,.66);
+    // Porch posts (timber look)
+    _add(g,_cyl(.04,.04,h*.7,4,0x6b4c1a),-.3,h*.35+.12,.66);
+    _add(g,_cyl(.04,.04,h*.7,4,0x6b4c1a),.3,h*.35+.12,.66);
+    _add(g,_box(.72,.06,.06,0x6b4c1a),0,h*.7+.12,.66); // beam
+    // Firewood stack (side detail)
+    _add(g,_box(.28,.14,.12,0x7a5c2e),-.42,.18,.0);
   }
   return g;
 }
