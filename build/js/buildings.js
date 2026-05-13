@@ -237,7 +237,8 @@ function makeApartment(gx,gz){
     _add(g,_box(fw,wh+0.06,fd,trimC,{shadow:false}),x,y,z);
     const gw=axis==='z'?wr:gThick;
     const gd=axis==='z'?gThick:wr;
-    _add(g,_box(gw,wh,gd,glassC,glassOpt),x,y,z);
+    // Disable shadow on glass to prevent aggressive z-fighting acne on the walls
+    _add(g,_box(gw,wh,gd,glassC,{...glassOpt, shadow:false}),x,y,z);
   }
 
   if(v===0){
@@ -245,13 +246,13 @@ function makeApartment(gx,gz){
     const h=floors*0.6;
     const baseC=0x1e293b;
     const glassC=0x38bdf8;
-    const gOpt={win:true,em:0x0ea5e9,ei:0,sh:150};
+    const gOpt={win:true,em:0x0ea5e9,ei:0,sh:150}; // shadows handled by helper
     
     // Lobby
     _add(g,_box(1.3,0.4,1.3,baseC),0,0.2,0);
     // Lobby entrance
     _add(g,_box(0.5,0.3,0.05,0xd1d5db,{shadow:false}),0,0.15,0.66); // awning
-    _add(g,_box(0.4,0.3,0.06,glassC,gOpt),0,0.15,0.65); // doors
+    _add(g,_box(0.4,0.3,0.06,glassC,{...gOpt, shadow:false}),0,0.15,0.65); // doors
     
     // Tower core
     _add(g,_box(1.0,h,1.0,0x0f172a),0,0.4+h/2,0);
@@ -261,10 +262,10 @@ function makeApartment(gx,gz){
       const fy = 0.4 + f*0.6 + 0.3;
       // Metal floor band
       _add(g,_box(1.05,0.06,1.05,0x475569),0,fy+0.27,0);
-      // Continuous glass on all 4 sides
+      // Continuous glass on all 4 sides (shadow disabled to prevent acne)
       [-0.51, 0.51].forEach(pos => {
-        _add(g,_box(0.9, 0.45, 0.05, glassC, gOpt), 0, fy, pos); // Z faces
-        _add(g,_box(0.05, 0.45, 0.9, glassC, gOpt), pos, fy, 0); // X faces
+        _add(g,_box(0.9, 0.45, 0.05, glassC, {...gOpt, shadow:false}), 0, fy, pos); // Z faces
+        _add(g,_box(0.05, 0.45, 0.9, glassC, {...gOpt, shadow:false}), pos, fy, 0); // X faces
       });
     }
     
@@ -351,15 +352,18 @@ function makeApartment(gx,gz){
       // Balcony / Terrace floor outside the new block
       _add(g,_box(curW+0.2,0.05,curW+0.2,0xcbd5e1),0,curY+0.025,0);
       
-      // Plants on terraces
-      _add(g,_box(curW,0.08,0.1,0x22c55e,{shadow:false}),0,curY+0.08,curW/2+0.05); // front planter
-      _add(g,_box(0.1,0.08,curW,0x22c55e,{shadow:false}),curW/2+0.05,curY+0.08,0); // right planter
+      // Plants on terraces (fixed clipping: height 0.06, center y+0.08 -> bottom y+0.05 aligns with balcony)
+      _add(g,_box(curW,0.06,0.1,0x22c55e,{shadow:false}),0,curY+0.08,curW/2+0.05); // front planter
+      _add(g,_box(0.1,0.06,curW,0x22c55e,{shadow:false}),curW/2+0.05,curY+0.08,0); // right planter
       
-      // Glass railings
-      _add(g,_box(curW+0.2,0.15,0.02,0xbae6fd,{transparent:true,opacity:0.6}),0,curY+0.1,curW/2+0.09);
-      _add(g,_box(curW+0.2,0.15,0.02,0xbae6fd,{transparent:true,opacity:0.6}),0,curY+0.1,-curW/2-0.09);
-      _add(g,_box(0.02,0.15,curW+0.2,0xbae6fd,{transparent:true,opacity:0.6}),curW/2+0.09,curY+0.1,0);
-      _add(g,_box(0.02,0.15,curW+0.2,0xbae6fd,{transparent:true,opacity:0.6}),-curW/2-0.09,curY+0.1,0);
+      // Glass railings (opaque to fix transparency sorting glitch, lengths adjusted to prevent corner intersection)
+      const rL = curW + 0.16;
+      const sL = curW + 0.20;
+      const rOpt = {sh: 150, shadow: false};
+      _add(g,_box(rL, 0.15, 0.02, 0xbae6fd, rOpt),0,curY+0.1,curW/2+0.09);
+      _add(g,_box(rL, 0.15, 0.02, 0xbae6fd, rOpt),0,curY+0.1,-curW/2-0.09);
+      _add(g,_box(0.02, 0.15, sL, 0xbae6fd, rOpt),curW/2+0.09,curY+0.1,0);
+      _add(g,_box(0.02, 0.15, sL, 0xbae6fd, rOpt),-curW/2-0.09,curY+0.1,0);
 
       // Huge floor-to-ceiling windows
       const wSize = curW*0.6;
@@ -374,7 +378,7 @@ function makeApartment(gx,gz){
     
     // Roof pool
     _add(g,_box(curW+0.1,0.06,curW+0.1,0x94a3b8),0,curY+0.03,0);
-    _add(g,_box(curW*0.6,0.02,curW*0.6,0x38bdf8,{em:0x0ea5e9,ei:0.2}),0,curY+0.07,0); // pool water
+    _add(g,_box(curW*0.6,0.02,curW*0.6,0x38bdf8,{em:0x0ea5e9,ei:0.2,shadow:false}),0,curY+0.07,0); // pool water
   }
   return g;
 }
