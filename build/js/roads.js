@@ -202,12 +202,12 @@ function makeRoad(gx, gz) {
     g.add(mh);
   }
 
-  // ── Street lamp posts – very sparse, one side only ─
+  // ── Street lamp posts ──
   if (window.gfxSettings?.streetLights !== 'off') {
-    if (!N && seededRandom(gx, gz, 50) > 0.90) _addLampPost(g, -0.55, -(half - 0.22), 0);
-    if (!S && seededRandom(gx, gz, 51) > 0.90) _addLampPost(g,  0.55,  (half - 0.22), Math.PI);
-    if (!W && seededRandom(gx, gz, 52) > 0.90) _addLampPost(g, -(half - 0.22), -0.55, -Math.PI/2);
-    if (!E && seededRandom(gx, gz, 53) > 0.90) _addLampPost(g,  (half - 0.22),  0.55, Math.PI/2);
+    if (!N && seededRandom(gx, gz, 50) > 0.60) _addLampPost(g, -0.55, -(half - 0.22), 0);
+    if (!S && seededRandom(gx, gz, 51) > 0.60) _addLampPost(g,  0.55,  (half - 0.22), Math.PI);
+    if (!W && seededRandom(gx, gz, 52) > 0.60) _addLampPost(g, -(half - 0.22), -0.55, Math.PI/2);
+    if (!E && seededRandom(gx, gz, 53) > 0.60) _addLampPost(g,  (half - 0.22),  0.55, -Math.PI/2);
   }
 
   return g;
