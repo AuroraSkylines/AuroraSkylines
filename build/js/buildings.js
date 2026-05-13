@@ -784,27 +784,25 @@ function getRoadFacingAngle(gx, gz) {
   const E = state.grid[key(gx+1, gz  )]?.type === 'road';
   const W = state.grid[key(gx-1, gz  )]?.type === 'road';
 
-  // Camera sits at (28,28,28) — only +Z (south) and +X (east) faces are visible.
-  // Facing north (PI) or west (PI/2) hides the front facade from the player.
-  // Rule: ALWAYS prefer south (0) > east (-PI/2) so the decorated face stays visible.
+  // Single road neighbour — always face it directly
+  if (S && !N && !E && !W) return 0;           // road south → face south
+  if (E && !N && !S && !W) return -Math.PI/2;  // road east  → face east
+  if (N && !S && !E && !W) return Math.PI;     // road north → face north
+  if (W && !N && !S && !E) return Math.PI/2;   // road west  → face west
 
-  // South road → face south (front visible, faces road) ✓
+  // Multiple road neighbours — face the most prominent one.
+  // Prefer south then east (camera-visible) when there is a choice,
+  // but north/west are used when they are the unique side.
   if (S) return 0;
-
-  // East road (no south) → face east (front visible, faces road) ✓
   if (E) return -Math.PI/2;
-
-  // North-only road → face south (front stays camera-visible, back near road)
-  if (N) return 0;
-
-  // West-only road → face east (front stays camera-visible, back near road)
-  if (W) return -Math.PI/2;
+  if (N) return Math.PI;
+  if (W) return Math.PI/2;
 
   // No adjacent road — look 2 tiles out
   if (state.grid[key(gx,   gz+2)]?.type === 'road') return 0;
   if (state.grid[key(gx+2, gz  )]?.type === 'road') return -Math.PI/2;
-  if (state.grid[key(gx,   gz-2)]?.type === 'road') return 0;
-  if (state.grid[key(gx-2, gz  )]?.type === 'road') return -Math.PI/2;
+  if (state.grid[key(gx,   gz-2)]?.type === 'road') return Math.PI;
+  if (state.grid[key(gx-2, gz  )]?.type === 'road') return Math.PI/2;
 
   // Seeded stable fallback
   return seededRandom(gx, gz, 99) > 0.5 ? 0 : -Math.PI/2;
