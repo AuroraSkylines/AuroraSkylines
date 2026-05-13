@@ -784,31 +784,27 @@ function getRoadFacingAngle(gx, gz) {
   const E = state.grid[key(gx+1, gz  )]?.type === 'road';
   const W = state.grid[key(gx-1, gz  )]?.type === 'road';
 
-  // Priority: face the road that is on a unique side (not through-road)
-  // Camera-visible angles first (0 = face +Z, -PI/2 = face +X) to prefer visible windows
-  // Then hidden angles (PI = face -Z, PI/2 = face -X) for roads behind building
+  // Camera sits at (28,28,28) — only +Z (south) and +X (east) faces are visible.
+  // Facing north (PI) or west (PI/2) hides the front facade from the player.
+  // Rule: ALWAYS prefer south (0) > east (-PI/2) so the decorated face stays visible.
 
-  // Single road neighbor
-  if (S && !N && !E && !W) return 0;           // road south  → face south   (+Z visible)
-  if (E && !N && !S && !W) return -Math.PI/2;  // road east   → face east    (+X visible)
-  if (N && !S && !E && !W) return Math.PI;     // road north  → face north   (-Z, faces road)
-  if (W && !N && !S && !E) return Math.PI/2;   // road west   → face west    (-X, faces road)
+  // South road → face south (front visible, faces road) ✓
+  if (S) return 0;
 
-  // Multiple roads: prefer camera-visible sides (south/east) over hidden (north/west)
-  if (S && !N) return 0;
-  if (E && !W) return -Math.PI/2;
-  if (N && !S) return Math.PI;
-  if (W && !E) return Math.PI/2;
+  // East road (no south) → face east (front visible, faces road) ✓
+  if (E) return -Math.PI/2;
 
-  // Straight through-road or 4-way: pick camera-facing direction
-  if (S || N) return 0;
-  if (E || W) return -Math.PI/2;
+  // North-only road → face south (front stays camera-visible, back near road)
+  if (N) return 0;
+
+  // West-only road → face east (front stays camera-visible, back near road)
+  if (W) return -Math.PI/2;
 
   // No adjacent road — look 2 tiles out
   if (state.grid[key(gx,   gz+2)]?.type === 'road') return 0;
   if (state.grid[key(gx+2, gz  )]?.type === 'road') return -Math.PI/2;
-  if (state.grid[key(gx,   gz-2)]?.type === 'road') return Math.PI;
-  if (state.grid[key(gx-2, gz  )]?.type === 'road') return Math.PI/2;
+  if (state.grid[key(gx,   gz-2)]?.type === 'road') return 0;
+  if (state.grid[key(gx-2, gz  )]?.type === 'road') return -Math.PI/2;
 
   // Seeded stable fallback
   return seededRandom(gx, gz, 99) > 0.5 ? 0 : -Math.PI/2;
