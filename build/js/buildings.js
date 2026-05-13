@@ -4,8 +4,57 @@
 'use strict';
 
 // ── Helpers ───────────────────────────────────────
+const _matCache = {};
+function _getMat(col, opt) {
+  const key = col + '_' + (opt.sh||12) + '_' + (opt.em||0) + '_' + (opt.ei||0) + '_' + (opt.transparent||false) + '_' + (opt.opacity||1);
+  if (!_matCache[key]) {
+    _matCache[key] = new THREE.MeshPhongMaterial({
+      color: col,
+      flatShading: true,
+      shininess: opt.sh||12,
+      ...(opt.em?{emissive:opt.em,emissiveIntensity:opt.ei||0}:{}),
+      ...(opt.transparent?{transparent:true, opacity:opt.opacity}:{})
+    });
+  }
+  return _matCache[key];
+}
+
+// ── Optimizer ─────────────────────────────────────
+function optimizeBuildingGroup(g) {
+  if (!window.THREE.BufferGeometryUtils) return g;
+  const matKeys = {};
+  g.children.forEach(obj => {
+    // If it's a group (like a lamp post), we should traverse it!
+    obj.traverse(child => {
+      if (child.isMesh) {
+        const mat = child.material;
+        const key = mat.uuid + '_' + child.castShadow + '_' + (child.userData.isWindow||false) + '_' + (child.userData.isLamp||false) + '_' + (child.userData.isLampLight||false);
+        if (!matKeys[key]) matKeys[key] = { mat: mat, geoms: [], shadow: child.castShadow, win: child.userData.isWindow, lamp: child.userData.isLamp, lampLight: child.userData.isLampLight, winRnd: child.userData.winRnd };
+        const geom = child.geometry.clone();
+        child.updateMatrixWorld(true); // MUST use MatrixWorld because child might be inside a Group (like lampGroup)
+        geom.applyMatrix4(child.matrixWorld);
+        matKeys[key].geoms.push(geom);
+      }
+    });
+  });
+  const newG = new THREE.Group();
+  for (let k in matKeys) {
+    const data = matKeys[k];
+    if (data.geoms.length > 0) {
+      const merged = THREE.BufferGeometryUtils.mergeBufferGeometries(data.geoms, false);
+      const mesh = new THREE.Mesh(merged, data.mat);
+      mesh.castShadow = data.shadow; mesh.receiveShadow = data.shadow;
+      if (data.win) { mesh.userData.isWindow = true; mesh.userData.winRnd = data.winRnd; }
+      if (data.lamp) { mesh.userData.isLamp = true; }
+      if (data.lampLight) { mesh.userData.isLampLight = true; }
+      newG.add(mesh);
+    }
+  }
+  return newG;
+}
+
 function _box(w,h,d,col,opt={}){
-  const m=new THREE.MeshPhongMaterial({color:col,flatShading:true,shininess:opt.sh||12,...(opt.em?{emissive:opt.em,emissiveIntensity:opt.ei||0}:{})});
+  const m=_getMat(col, opt);
   const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);
   if(opt.win){mesh.userData.isWindow=true;mesh.userData.winRnd=0.7+Math.random()*0.6;}
   if(opt.lamp){mesh.userData.isLamp=true;}
@@ -13,7 +62,7 @@ function _box(w,h,d,col,opt={}){
   return mesh;
 }
 function _cyl(rt,rb,h,seg,col,opt={}){
-  const m=new THREE.MeshPhongMaterial({color:col,flatShading:true,shininess:opt.sh||12,...(opt.em?{emissive:opt.em,emissiveIntensity:opt.ei||0}:{})});
+  const m=_getMat(col, opt);
   const mesh=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg),m);
   if(opt.win){mesh.userData.isWindow=true;mesh.userData.winRnd=0.7+Math.random()*0.6;}
   if(opt.lamp){mesh.userData.isLamp=true;}
@@ -217,7 +266,7 @@ function makeHouse(gx,gz){
     // Firewood stack (side detail)
     _add(g,_box(.28,.14,.12,0x7a5c2e),-.42,.18,.0);
   }
-  return g;
+  return optimizeBuildingGroup(g);
 }
 
 
@@ -380,7 +429,7 @@ function makeApartment(gx,gz){
     _add(g,_box(curW+0.1,0.06,curW+0.1,0x94a3b8),0,curY+0.03,0);
     _add(g,_box(curW*0.6,0.02,curW*0.6,0x38bdf8,{em:0x0ea5e9,ei:0.2,shadow:false}),0,curY+0.07,0); // pool water
   }
-  return g;
+  return optimizeBuildingGroup(g);
 }
 
 // ── Shop ──────────────────────────────────────────
@@ -418,7 +467,7 @@ function makeShop(gx,gz){
     _add(g,_box(1.4,.1,1.35,0xf0f5f8),0,1.0,0);
     _add(g,_box(.9,.22,.06,0x22d3ee,{em:0x06b6d4,ei:0,sh:80}),0,.78,.65);// neon sign
   }
-  return g;
+  return optimizeBuildingGroup(g);
 }
 
 // ── Park ──────────────────────────────────────────
@@ -458,7 +507,7 @@ function makePark(gx,gz){
     addTree(-.88,-.88,.7,2);addTree(.88,-.88,.7,3);addTree(-.88,.88,.7,4);addTree(.88,.88,.7,5);
     bench(.0,.65,0);bench(.65,.0,Math.PI/2);
   }
-  return g;
+  return optimizeBuildingGroup(g);
 }
 
 // ── Wind Turbine ──────────────────────────────────
@@ -478,7 +527,7 @@ function makeWindTurbine(gx,gz){
   g.add(rotor);g.userData.rotor=rotor;
   // Warning light
   const wl=_cyl(.06,.06,.04,5,0xff4444,{lamp:true,em:0xff0000,ei:.8});_add(g,wl,0,2.9,0);
-  return g;
+  return optimizeBuildingGroup(g);
 }
 
 // ── Solar Farm ────────────────────────────────────
@@ -495,7 +544,7 @@ function makeSolar(gx,gz){
     const p=new THREE.Mesh(new THREE.BoxGeometry(.46,.04,.38),pMat);
     p.position.set(px,.36,pz);p.rotation.x=-.48;p.castShadow=true;g.add(p);
   });
-  return g;
+  return optimizeBuildingGroup(g);
 }
 
 // ── Nuclear Plant ─────────────────────────────────
@@ -519,7 +568,7 @@ function makeNuclear(gx,gz){
     _add(g,_box(2.2,.28,.04,0x64748b),0,.24,s*.88);
     _add(g,_box(.04,.28,1.82,0x64748b),s*1.1,.24,0);
   });
-  return g;
+  return optimizeBuildingGroup(g);
 }
 
 // ── Factory ───────────────────────────────────────
@@ -550,7 +599,7 @@ function makeFactory(gx,gz){
     _add(g,_box(.1,.5,.1,0x475569),0,.57,-.65);// vent
     _add(g,_cyl(.04,.04,.22,5,0x6ee7b7,{em:0x34d399,ei:.5}),0,.8,-.65);// green light
   }
-  return g;
+  return optimizeBuildingGroup(g);
 }
 
 // ── Registry ──────────────────────────────────────

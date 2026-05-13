@@ -217,7 +217,7 @@ function makeRoad(gx, gz) {
     if (!E && seededRandom(gx, gz, 53) > 0.60) _addLampPost(g,  (half - 0.22),  0.55, -Math.PI/2);
   }
 
-  return g;
+  return window.optimizeBuildingGroup ? window.optimizeBuildingGroup(g) : g;
 }
 
 function rebuildRoad(gx, gz) {
