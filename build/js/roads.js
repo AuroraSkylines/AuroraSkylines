@@ -14,7 +14,6 @@ const _roadMats = {
   lampPole: new THREE.MeshPhongMaterial({ color: 0x5a5e72, flatShading: true }),
   lampHead: new THREE.MeshPhongMaterial({ color: 0xffdd88, emissive: 0xffaa22, emissiveIntensity: 0.0, flatShading: true }),
   lampLens: new THREE.MeshStandardMaterial({ color: 0xfff0c0, emissive: 0xffcc66, emissiveIntensity: 0.0, roughness: 0.3, metalness: 0.1 }),
-  lampGlow: new THREE.MeshBasicMaterial({ color: 0xffcc66, transparent: true, opacity: 0, depthWrite: false }),
 };
 
 function _addBox(g, x, y, z, w, h, d, mat) {
@@ -66,12 +65,13 @@ function _addLampPost(g, x, z, rotY) {
   lens.userData.isLamp = true;
   lampGroup.add(lens);
 
-  // ── Fake point light (Performance optimization) ──
-  // Hundreds of real PointLights cause severe WebGL lag. We use a glowing ground decal instead.
-  const glow = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.02, 12), _roadMats.lampGlow);
-  glow.position.set(0, 0.155, 0.38);
-  glow.userData.isLampLight = true;
-  lampGroup.add(glow);
+  // ── Real PointLight (no shadows for performance) ──
+  // Tight distance + decay ensures only nearby surfaces are lit.
+  // Proximity culling in renderer.js keeps max active lights low.
+  const ptLight = new THREE.PointLight(0xffcc66, 0, 5, 2);
+  ptLight.position.set(0, 1.85, 0.38);
+  ptLight.userData.isLampLight = true;
+  lampGroup.add(ptLight);
 
   g.add(lampGroup);
 }

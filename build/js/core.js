@@ -124,7 +124,9 @@ function placeBuilding(gx, gz) {
     if(refund>0){state.gold+=refund;toast(`Refunded ${fmtEuro(refund)}`,'ok');}
     else toast('Demolished');
     neighbours(gx,gz).forEach(([x,z])=>rebuildRoad(x,z));
-    recalc();hudUpdate();updateIncomePreview();refreshUpgradeCards();return;
+    recalc();hudUpdate();updateIncomePreview();refreshUpgradeCards();
+    if (typeof markLampsDirty === 'function') markLampsDirty();
+    return;
   }
 
   const cfg=BDATA[type];
@@ -140,7 +142,9 @@ function placeBuilding(gx, gz) {
     playSound('place');
     scene.add(g); state.meshes[k]=g; popIn(g);
     neighbours(gx,gz).forEach(([x,z])=>rebuildRoad(x,z));
-    recalc();hudUpdate();updateIncomePreview();refreshUpgradeCards();return;
+    recalc();hudUpdate();updateIncomePreview();refreshUpgradeCards();
+    if (typeof markLampsDirty === 'function') markLampsDirty();
+    return;
   }
 
   if(NEEDS_ROAD.has(type)&&!hasRoadNeighbour(gx,gz)){toast('Needs a road neighbor','warn');return;}
@@ -362,6 +366,7 @@ function rebuildAllMeshes() {
     const [x, z] = k.split(',').map(Number);
     if (state.grid[k].type === 'road') rebuildRoad(x, z);
   });
+  if (typeof markLampsDirty === 'function') markLampsDirty();
 }
 
 function dismissLoadingScreen() {
@@ -515,6 +520,7 @@ function animate(now){
 
     animPart(dt);
     updateCars(dt);
+    if (typeof updateLampProximity === 'function') updateLampProximity(t);
 
     Object.values(state.meshes).forEach(mesh => {
       if (mesh.userData.rotor) {

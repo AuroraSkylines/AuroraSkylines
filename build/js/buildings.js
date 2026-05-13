@@ -24,6 +24,8 @@ function optimizeBuildingGroup(g) {
   if (!window.THREE.BufferGeometryUtils) return g;
   g.updateMatrixWorld(true);
   const matKeys = {};
+  const preservedLights = []; // PointLights etc. must survive the merge
+
   g.children.forEach(obj => {
     // If it's a group (like a lamp post), we should traverse it!
     obj.traverse(child => {
@@ -35,6 +37,19 @@ function optimizeBuildingGroup(g) {
         child.updateMatrixWorld(true); // MUST use MatrixWorld because child might be inside a Group (like lampGroup)
         geom.applyMatrix4(child.matrixWorld);
         matKeys[key].geoms.push(geom);
+      } else if (child.isLight) {
+        // Clone light and move it to world-space position so it survives group flattening
+        child.updateMatrixWorld(true);
+        const lightClone = child.clone();
+        const wp = new THREE.Vector3();
+        child.getWorldPosition(wp);
+        // Adjust for the parent group's own position (which will be set later)
+        const gp = new THREE.Vector3();
+        g.getWorldPosition(gp);
+        lightClone.position.set(wp.x - gp.x, wp.y - gp.y, wp.z - gp.z);
+        // Copy userData
+        lightClone.userData = { ...child.userData };
+        preservedLights.push(lightClone);
       }
     });
   });
@@ -51,8 +66,11 @@ function optimizeBuildingGroup(g) {
       newG.add(mesh);
     }
   }
+  // Re-add all preserved lights
+  preservedLights.forEach(l => newG.add(l));
   return newG;
 }
+
 
 function _box(w,h,d,col,opt={}){
   const m=_getMat(col, opt);

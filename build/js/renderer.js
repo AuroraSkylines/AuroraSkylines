@@ -79,29 +79,93 @@ const rim = new THREE.DirectionalLight(0xc084fc, 0.08);
 rim.position.set(0, 12, -40);
 scene.add(rim);
 
-// ── Window / Lamp glow update (throttled) ─────────
+// ── Window / Lamp glow update (throttled) ─────
+// ── Proximity-based lamp culling ───────────────────
+// Only enable real PointLights near the camera. This caps GPU cost
+// regardless of city size. Shadow-less PointLights still need
+// uniforms/math per-light per-fragment, so we cap at MAX_ACTIVE_LAMPS.
+const MAX_ACTIVE_LAMPS = 16; // safe ceiling for most GPUs
+let _allLampLights = [];     // flat list rebuilt when city changes
+let _lampListDirty = true;   // set true after any road build
+let _lastProxTime  = 0;      // timestamp for throttling
+let _currentLampIntensity = 0;
+
+// Call this whenever roads are added/removed so we rescan next frame
+function markLampsDirty() { _lampListDirty = true; }
+window.markLampsDirty = markLampsDirty;
+
+function _rebuildLampList() {
+  _allLampLights = [];
+  scene.traverse(obj => {
+    if (obj.isPointLight && obj.userData.isLampLight) {
+      _allLampLights.push(obj);
+    }
+  });
+  _lampListDirty = false;
+}
+
+function updateLampProximity(now) {
+  // Throttle to every 500 ms
+  if (now - _lastProxTime < 500) return;
+  _lastProxTime = now;
+
+  if (_lampListDirty) _rebuildLampList();
+  if (_allLampLights.length === 0) return;
+
+  const targetIntensity = _currentLampIntensity;
+  if (targetIntensity <= 0) {
+    // Night phase off — disable all (fast path)
+    _allLampLights.forEach(l => { l.intensity = 0; l.visible = false; });
+    return;
+  }
+
+  // World-space camera target (approx: camera mid-point at y=0)
+  const cx = camera.position.x;
+  const cz = camera.position.z;
+
+  // Compute squared distance for each light (world space)
+  _allLampLights.forEach(l => {
+    l.userData._distSq = (l.getWorldPosition(_tmpVec3).x - cx) ** 2 +
+                         (l.getWorldPosition(_tmpVec3).z - cz) ** 2;
+  });
+
+  // Sort ascending by distance
+  _allLampLights.sort((a, b) => a.userData._distSq - b.userData._distSq);
+
+  // Enable nearest N, disable the rest
+  _allLampLights.forEach((l, i) => {
+    if (i < MAX_ACTIVE_LAMPS) {
+      l.intensity = targetIntensity;
+      l.visible = true;
+    } else {
+      l.intensity = 0;
+      l.visible = false;
+    }
+  });
+}
+
+const _tmpVec3 = new THREE.Vector3();
+
 let _lastWindowPhase = -1;
 function updateWindowGlow(phase) {
   if (Math.abs(phase - _lastWindowPhase) < 0.008) return;
   _lastWindowPhase = phase;
-  const winIntensity   = Math.max(0, 0.9 - phase * 1.8);
-  const lampIntensity  = Math.max(0, 1.0 - phase * 2.0);
+  const winIntensity  = Math.max(0, 0.9 - phase * 1.8);
+  // Lamp intensity: full at night (phase 0), fade out by phase 0.5
+  const lampIntensity = Math.max(0, 1.0 - phase * 2.0) * 2.2;
+  _currentLampIntensity = lampIntensity; // shared with proximity culler
+
   scene.traverse(obj => {
-    if (!obj.isMesh && !obj.isLight) return;
-    if (obj.isMesh && obj.userData.isWindow) {
+    if (!obj.isMesh) return;
+    if (obj.userData.isWindow) {
       obj.material.emissiveIntensity = winIntensity * (obj.userData.winRnd || 1.0);
     }
-    if (obj.isMesh && obj.userData.isLamp) {
-      obj.material.emissiveIntensity = lampIntensity * 2.5;
-    }
-    if (obj.isMesh && obj.userData.isLampLight) {
-      obj.material.opacity = lampIntensity * 0.6;
-    }
-    // Drive the real PointLight for each lamp post
-    if (obj.isLight && obj.userData.isLampLight) {
-      obj.intensity = lampIntensity * 1.8;
+    if (obj.userData.isLamp) {
+      // Emissive on the lens fixture itself (cheap, always on)
+      obj.material.emissiveIntensity = lampIntensity * 1.1;
     }
   });
+  // Note: actual PointLight intensities are set by updateLampProximity()
 }
 
 // ── Sky phase (phase 0=night, 1=full day) ─────────
