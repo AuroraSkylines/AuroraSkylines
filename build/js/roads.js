@@ -69,7 +69,7 @@ function _addLampPost(g, x, z, rotY) {
   // ── Fake point light (Performance optimization) ──
   // Hundreds of real PointLights cause severe WebGL lag. We use a glowing ground decal instead.
   const glow = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.02, 12), _roadMats.lampGlow);
-  glow.position.set(0, 0.02, 0.38);
+  glow.position.set(0, 0.155, 0.38);
   glow.userData.isLampLight = true;
   lampGroup.add(glow);
 

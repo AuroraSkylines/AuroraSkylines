@@ -22,6 +22,7 @@ function _getMat(col, opt) {
 // ── Optimizer ─────────────────────────────────────
 function optimizeBuildingGroup(g) {
   if (!window.THREE.BufferGeometryUtils) return g;
+  g.updateMatrixWorld(true);
   const matKeys = {};
   g.children.forEach(obj => {
     // If it's a group (like a lamp post), we should traverse it!
