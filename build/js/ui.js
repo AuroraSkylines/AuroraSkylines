@@ -258,11 +258,7 @@ function updateDayBar() {
 }
 
 function updateIncomePreview() {
-  const pill = document.getElementById('money-pill');
-  if (!pill) return;
-  const daily = projectedDailyIncome();
-  const hourly = Math.floor(daily / 24);
-  pill.title = `Income: ${fmtEuroSigned(hourly)}/h`;
+  // Now handled by custom HUD tooltips
 }
 
 function hudUpdate(pop=false){
@@ -343,3 +339,63 @@ document.getElementById('save-manager-close')?.addEventListener('click', () => {
 });
 document.querySelector('#pause-overlay .pause-backdrop')?.addEventListener('click', () => closePauseMenu());
 document.getElementById('pause-fab')?.addEventListener('click', e => { e.stopPropagation(); playSound('click'); togglePauseMenu(); });
+
+// HUD TOOLTIPS
+function initHudTooltips() {
+  const tt = document.getElementById('hud-tooltip');
+  if (!tt) return;
+
+  document.querySelectorAll('.res-pill').forEach(pill => {
+    pill.addEventListener('mouseenter', () => {
+      let content = '';
+      const id = pill.id;
+
+      if (id === 'money-pill') {
+        const daily = projectedDailyIncome();
+        const hourly = Math.floor(daily / 24);
+        const cls = hourly >= 0 ? 'ht-pos' : 'ht-neg';
+        content = `
+          <span class="ht-label">Hourly Projection</span>
+          <div class="ht-value ${cls}">${fmtEuroSigned(hourly)}/h</div>
+        `;
+      } else if (pill.classList.contains('pop-pill')) {
+        content = `
+          <span class="ht-label">City Demographics</span>
+          <div class="ht-value ht-neu">${state.pop} Citizens</div>
+        `;
+      } else if (id === 'pill-energy') {
+        const cls = state.energy >= 0 ? 'ht-pos' : 'ht-neg';
+        content = `
+          <span class="ht-label">Power Balance</span>
+          <div class="ht-value ${cls}">${state.energy >= 0 ? '+' : ''}${state.energy} GW</div>
+        `;
+      } else if (pill.classList.contains('day-pill')) {
+        content = `
+          <span class="ht-label">Simulation Time</span>
+          <div class="ht-value ht-neu">Day ${Math.floor(state.day)}</div>
+        `;
+      }
+
+      if (content) {
+        tt.innerHTML = content;
+        tt.classList.add('show');
+        const rect = pill.getBoundingClientRect();
+        tt.style.left = (rect.left + rect.width / 2) + 'px';
+        tt.style.top = (rect.bottom + 12) + 'px';
+      }
+    });
+
+    pill.addEventListener('mouseleave', () => {
+      tt.classList.remove('show');
+    });
+  });
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', () => {
+  initHudTooltips();
+});
+// Also run immediately if DOM is already loaded
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  initHudTooltips();
+}
