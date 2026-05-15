@@ -343,25 +343,31 @@
   <div id="pause-overlay" aria-hidden="true">
     <div class="pause-backdrop"></div>
     <div class="pause-card">
+      <div class="pause-badge">
+        <i class="bi bi-pause-fill"></i>
+      </div>
+      
+      <h2 class="pause-title">Simulation Paused</h2>
+      <p class="pause-hint">System on standby. Press <kbd>ESC</kbd> to resume.</p>
 
-      <!-- Header -->
-      <div class="pause-header">
-        <div class="pause-badge">⏸</div>
-        <div>
-          <h2 class="pause-title">Game Paused</h2>
-          <p class="pause-hint"><kbd>ESC</kbd> / <kbd>P</kbd> to resume</p>
-        </div>
+      <div class="pause-actions">
+        <button type="button" class="pm-btn pm-btn--primary" id="pause-resume">
+          <i class="bi bi-play-fill"></i> Resume City
+        </button>
+        <button type="button" class="pm-btn" id="pause-save-open">
+          <i class="bi bi-cloud-arrow-up-fill"></i> Save Manager
+        </button>
+        <button type="button" class="pm-btn pm-btn--settings" id="pause-settings-open" onclick="openIngameSettings()">
+          <i class="bi bi-gear-fill"></i> System Settings
+        </button>
+        <button type="button" class="pm-btn pm-btn--danger" id="pause-quit">
+          <i class="bi bi-box-arrow-right"></i> Save & Quit to Menu
+        </button>
       </div>
 
-      <!-- Actions -->
-      <div class="pause-actions" style="margin-top:20px;">
-        <button type="button" class="pm-btn pm-btn--primary" id="pause-resume">▶︎ Resume</button>
-        <button type="button" class="pm-btn" id="pause-save-open">💾 Save Manager</button>
-        <button type="button" class="pm-btn pm-btn--danger" id="pause-quit">Save &amp; Quit to Menu</button>
-        <button type="button" class="pm-btn pm-btn--settings" id="pause-settings-open" onclick="openIngameSettings()">&#9881; Settings</button>
-      </div>
-
-      <p class="pause-foot"><kbd>WASD</kbd> / arrows pan &nbsp;·&nbsp; drag &nbsp;·&nbsp; wheel to zoom</p>
+      <p class="pause-foot" style="margin-top: 24px; opacity: 0.4; font-size: 10px;">
+        <i class="bi bi-info-circle"></i> WASD to pan • Scroll to zoom • Drag to rotate
+      </p>
     </div>
   </div>
 
