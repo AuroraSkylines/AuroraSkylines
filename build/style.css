@@ -717,12 +717,20 @@ body.game-paused #gameCanvas {
   to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); filter: blur(0); }
 }
 
-.main-logo {
-  width: 100%;
-  height: auto;
-  filter: drop-shadow(0 0 50px rgba(46, 230, 166, 0.4));
-  mix-blend-mode: screen; /* Removes black background */
-  display: block;
+.main-logo-text {
+  font-family: var(--fd);
+  font-weight: 900;
+  font-size: clamp(60px, 8vw, 140px);
+  letter-spacing: 0.15em;
+  background: linear-gradient(to bottom, #fff 20%, var(--mint) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 30px rgba(46, 230, 166, 0.4));
+  text-transform: uppercase;
+  line-height: 1;
+  margin-bottom: 10px;
+  white-space: nowrap;
 }
 
 .menu-tagline {
