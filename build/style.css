@@ -571,7 +571,7 @@ body.game-paused #gameCanvas {
 .pm-btn:hover {
   background: rgba(255,255,255,0.12);
   transform: translateY(-2px);
-  border-color: var(--mint);
+  border-color: var(--sky); /* Changed from mint to sky */
   box-shadow: 0 8px 24px rgba(0,0,0,0.3);
 }
 
@@ -579,7 +579,7 @@ body.game-paused #gameCanvas {
   content: '';
   position: absolute;
   inset: -2px;
-  border: 2px solid var(--mint);
+  border: 2px solid var(--sky); /* Changed from mint to sky */
   border-radius: 16px;
   opacity: 0;
   transform: scale(1.05);
@@ -1033,6 +1033,12 @@ body.game-paused #gameCanvas {
   font-size: 14px;
   cursor: pointer;
   padding: 6px 10px;
+  transition: all 0.2s ease;
+}
+#upgrades-close:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--sky);
+  border-color: var(--sky);
 }
 #upgrades-list {
   overflow-y: auto;
@@ -1313,7 +1319,11 @@ body.game-paused #gameCanvas {
   display: flex; align-items: center; justify-content: center;
   transition: background 0.15s, color 0.15s;
 }
-.sm-close:hover { background: rgba(255,255,255,0.12); color: #fff; }
+.sm-close:hover { 
+  background: rgba(255,255,255,0.12); 
+  color: var(--sky); 
+  border-color: var(--sky);
+}
 .sm-hint {
   font-family: var(--fu); font-size: 12px;
   color: rgba(255,255,255,0.38); margin-bottom: 22px;
