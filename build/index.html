@@ -142,18 +142,28 @@
 
   <!-- ── ACCOUNT MANAGER OVERLAY ──────────── -->
   <div id="account-overlay" aria-hidden="true" class="modal-overlay hidden">
-    <div class="pause-card" style="width: min(340px, 100%); margin: auto;">
-      <h2 class="pause-title">Account Manager</h2>
-      <p class="pause-hint" id="account-username" style="margin-top: -2px; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.05em;">Logged in as: ...</p>
+    <div class="account-card">
+      <div class="account-header-premium">
+        <div class="account-avatar">👤</div>
+        <h2 class="account-title-premium">Account Profile</h2>
+        <p class="account-user-badge" id="account-username">ADMIN</p>
+      </div>
       
-      <div style="display: flex; flex-direction: column; gap: 12px;">
-        <input type="password" id="account-new-password" placeholder="New Password" class="auth-input" style="width: 100%; box-sizing: border-box;">
-        <button id="btn-change-password" class="pm-btn pm-btn--primary">Change Password</button>
-        <div id="account-msg" class="auth-error hidden" style="margin-top: 4px;"></div>
+      <div class="account-section">
+        <label class="account-label">Security</label>
+        <div class="account-input-group">
+          <input type="password" id="account-new-password" placeholder="New Password" class="glass-input">
+          <button id="btn-change-password" class="pm-btn pm-btn--primary">Update Password</button>
+        </div>
+        <div id="account-msg" class="auth-error hidden"></div>
       </div>
 
-      <div class="pause-actions" style="margin-top:24px;">
-        <button type="button" class="pm-btn pm-btn--settings hidden" id="btn-open-admin" onclick="openAdminManager()" style="margin-bottom: 8px;">🔑 Manage Alpha Keys</button>
+      <div class="account-divider"></div>
+
+      <div class="account-actions-grid">
+        <button type="button" class="pm-btn pm-btn--settings hidden" id="btn-open-admin" onclick="openAdminManager()">
+          <span class="btn-icon">🔑</span> Manage Keys
+        </button>
         <button type="button" class="pm-btn" onclick="closeAccountManager()">Close</button>
         <button type="button" class="pm-btn pm-btn--danger" id="btn-logout">Log Out</button>
       </div>
