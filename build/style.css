@@ -721,6 +721,8 @@ body.game-paused #gameCanvas {
   width: 100%;
   height: auto;
   filter: drop-shadow(0 0 50px rgba(46, 230, 166, 0.4));
+  mix-blend-mode: screen; /* Removes black background */
+  display: block;
 }
 
 .menu-tagline {
