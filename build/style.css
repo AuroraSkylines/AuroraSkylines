@@ -674,7 +674,7 @@ body.game-paused #gameCanvas {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  padding: 60px 80px;
+  padding: 320px 80px 60px;
   background: linear-gradient(90deg, rgba(5, 8, 20, 0.9) 0%, rgba(5, 8, 20, 0.4) 40%, transparent 100%);
   backdrop-filter: blur(8px);
   animation: menu-fade-in 0.8s ease-out;
@@ -700,30 +700,39 @@ body.game-paused #gameCanvas {
 }
 
 .logo-container {
-  margin-bottom: 60px;
-  animation: logo-entrance 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  width: 90vw;
+  max-width: 1400px;
+  margin-bottom: 0;
+  animation: logo-entrance 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 10;
 }
 
 @keyframes logo-entrance {
-  from { opacity: 0; transform: scale(0.9); filter: blur(10px); }
-  to { opacity: 1; transform: scale(1); filter: blur(0); }
+  from { opacity: 0; transform: translateX(-50%) translateY(-20px) scale(0.95); filter: blur(15px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); filter: blur(0); }
 }
 
 .main-logo {
-  width: 420px;
-  filter: drop-shadow(0 0 30px rgba(46, 230, 166, 0.3));
-  margin-bottom: 8px;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 0 50px rgba(46, 230, 166, 0.4));
 }
 
 .menu-tagline {
   font-family: var(--fu);
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.4em;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.6em;
   text-transform: uppercase;
   color: var(--mint);
-  opacity: 0.8;
-  margin-left: 4px;
+  text-shadow: 0 0 20px rgba(46, 230, 166, 0.5);
+  margin-top: -20px;
+  opacity: 0.9;
 }
 
 .menu-nav {
