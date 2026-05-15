@@ -664,25 +664,22 @@ body.game-paused #gameCanvas {
   line-height: 1.4;
 }
 
-/* ── MAIN MENU (title screen) ─────────────── */
+/* ── MAIN MENU (Modernized Makeover) ─────────────── */
 #main-menu {
   position: fixed;
   inset: 0;
-  /* Above #loading (200) so title screen is clickable before init() runs */
   z-index: 1000;
   pointer-events: auto;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  gap: 10px;
-  padding: 32px;
-  text-align: center;
-  background: radial-gradient(ellipse at 50% 80%, rgba(26, 16, 53, 0.4) 0%, rgba(5, 8, 20, 0.8) 70%);
-  backdrop-filter: blur(4px);
-  overflow-y: auto;
-  scrollbar-width: none;
+  padding: 60px 80px;
+  background: linear-gradient(90deg, rgba(5, 8, 20, 0.9) 0%, rgba(5, 8, 20, 0.4) 40%, transparent 100%);
+  backdrop-filter: blur(8px);
+  animation: menu-fade-in 0.8s ease-out;
 }
+
 .is-background-mode #top-bar,
 .is-background-mode #build-menu,
 .is-background-mode #budget-anchor,
@@ -696,55 +693,157 @@ body.game-paused #gameCanvas {
   opacity: 0 !important;
   pointer-events: none !important;
 }
-#main-menu::-webkit-scrollbar { display: none; }
 
-
-.menu-hero {
-  font-size: 72px;
-  line-height: 1;
-  filter: drop-shadow(0 0 28px rgba(46,230,166,0.35));
-  margin-bottom: 4px;
+@keyframes menu-fade-in {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
 }
+
+.logo-container {
+  margin-bottom: 60px;
+  animation: logo-entrance 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes logo-entrance {
+  from { opacity: 0; transform: scale(0.9); filter: blur(10px); }
+  to { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+
+.main-logo {
+  width: 420px;
+  filter: drop-shadow(0 0 30px rgba(46, 230, 166, 0.3));
+  margin-bottom: 8px;
+}
+
 .menu-tagline {
   font-family: var(--fu);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.28em;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.4em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.42);
-  margin-bottom: 28px;
+  color: var(--mint);
+  opacity: 0.8;
+  margin-left: 4px;
 }
-.menu-actions {
+
+.menu-nav {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 12px;
+  gap: 20px;
+  width: 340px;
 }
-.menu-btn {
+
+.nav-btn {
+  position: relative;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 18px 24px;
+  border-radius: 16px;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+}
+
+.nav-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--mint), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 0;
+}
+
+.nav-btn:hover {
+  transform: translateX(10px) scale(1.02);
+  border-color: var(--mint);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 40px rgba(46, 230, 166, 0.15);
+}
+
+.nav-btn:hover::before {
+  opacity: 0.1;
+}
+
+/* The "Outline" animation the user requested */
+.nav-btn::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: 2px solid var(--mint);
+  border-radius: 18px;
+  opacity: 0;
+  transform: scale(1.05);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+}
+
+.nav-btn:hover::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.nav-btn-label {
+  display: block;
   font-family: var(--fd);
   font-weight: 800;
-  font-size: 14px;
-  min-width: 220px;
-  padding: 14px 28px;
-  border-radius: 14px;
-  border: none;
-  cursor: pointer;
-  transition: transform 0.1s, filter 0.15s, box-shadow 0.15s;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+  font-size: 18px;
+  letter-spacing: 0.02em;
+  position: relative;
+  z-index: 1;
 }
-.menu-btn--primary {
-  background: linear-gradient(145deg, var(--mint), var(--mint-dim));
-  color: #042f24;
-  box-shadow: 0 8px 28px rgba(46,230,166,0.35);
+
+.nav-btn-desc {
+  display: block;
+  font-family: var(--fu);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 4px;
+  position: relative;
+  z-index: 1;
 }
-.menu-btn--primary:active { transform: scale(0.98); }
-.menu-btn--ghost {
-  background: transparent !important;
-  border: 2px solid rgba(255,255,255,0.25) !important;
-  color: rgba(255,255,255,0.88) !important;
-  box-shadow: none !important;
+
+.nav-btn:hover .nav-btn-desc {
+  color: rgba(255, 255, 255, 0.8);
 }
-.menu-btn--ghost:active { transform: scale(0.98); }
+
+/* Account & Version Polish */
+.account-btn {
+  top: 40px !important;
+  right: 40px !important;
+  padding: 12px 24px !important;
+  border-radius: 14px !important;
+  background: var(--panel) !important;
+  border-color: var(--border) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+}
+
+.version-display {
+  bottom: 40px !important;
+  left: 80px !important;
+  background: var(--panel) !important;
+  padding: 8px 18px !important;
+  border-radius: 12px !important;
+}
+
+.version-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--mint);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--mint);
+  animation: version-pulse 2s infinite;
+}
+
+@keyframes version-pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
 
 /* ── INFO PANEL ───────────────────────────── */
 #info-panel {

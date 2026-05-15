@@ -110,20 +110,32 @@
   <audio id="bgMusic" loop src="music.mp3"></audio>
 
   <div id="main-menu">
-    <div class="menu-hero">🌆</div>
-    <div class="menu-game-title">Aurora Skylines</div>
-    <div class="menu-tagline">City builder</div>
+    <div class="logo-container">
+      <img src="logo.png" alt="Aurora Skylines" class="main-logo">
+      <div class="menu-tagline">The Ultimate City Simulator</div>
+    </div>
     
-    <div id="account-btn" class="account-btn" onclick="openAccountManager()">👤 Account</div>
-
-    <div class="menu-actions">
-      <button type="button" class="menu-btn menu-btn--primary" id="btn-load" onclick="openSaveManager()">Load Game</button>
-      <button type="button" class="menu-btn menu-btn--ghost" id="btn-new" onclick="startGameNew()">New Game</button>
-      <button type="button" class="menu-btn menu-btn--ghost" id="btn-settings" onclick="document.getElementById('settings-overlay').classList.add('is-visible')">Settings</button>
+    <div class="menu-nav">
+      <button type="button" class="nav-btn" id="btn-new" onclick="startGameNew()">
+        <span class="nav-btn-label">New Game</span>
+        <span class="nav-btn-desc">Start a fresh skyline</span>
+      </button>
+      <button type="button" class="nav-btn" id="btn-load" onclick="openSaveManager()">
+        <span class="nav-btn-label">Load Game</span>
+        <span class="nav-btn-desc">Continue your legacy</span>
+      </button>
+      <button type="button" class="nav-btn" id="btn-settings" onclick="document.getElementById('settings-overlay').classList.add('is-visible')">
+        <span class="nav-btn-label">Settings</span>
+        <span class="nav-btn-desc">Graphics & Audio</span>
+      </button>
     </div>
 
-    <!-- Version Indicator -->
+    <div id="account-btn" class="account-btn" onclick="openAccountManager()">
+      <span class="account-icon">👤</span> Account
+    </div>
+
     <div id="version-display" class="version-display" onclick="openPatchnotes()">
+      <div class="version-dot"></div>
       <span id="version-text">Checking version...</span>
     </div>
   </div>

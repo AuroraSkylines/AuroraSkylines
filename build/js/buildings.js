@@ -784,36 +784,47 @@ function getRoadFacingAngle(gx, gz) {
   const E = state.grid[key(gx+1, gz  )]?.type === 'road';
   const W = state.grid[key(gx-1, gz  )]?.type === 'road';
 
-  // "Unique" directions: road on that side but NOT on the opposite side.
-  // These identify the "inner path" / dead-end access road.
-  // Through-roads (both N+S or both E+W) are de-prioritised.
-  const uS = S && !N;  // unique south
-  const uE = E && !W;  // unique east
-  const uN = N && !S;  // unique north
-  const uW = W && !E;  // unique west
+  // No adjacent road — look 2 tiles out, same logic
+  if (!N && !S && !E && !W) {
+    if (state.grid[key(gx,   gz+2)]?.type === 'road') return 0;
+    if (state.grid[key(gx+2, gz  )]?.type === 'road') return -Math.PI/2;
+    if (state.grid[key(gx,   gz-2)]?.type === 'road') return Math.PI;
+    if (state.grid[key(gx-2, gz  )]?.type === 'road') return Math.PI/2;
+    return seededRandom(gx, gz, 99) > 0.5 ? 0 : -Math.PI/2;
+  }
 
-  // Step 1: prefer unique sides (the actual access road), tiebreak S>E>N>W
-  if (uS) return 0;
-  if (uE) return -Math.PI/2;
-  if (uN) return Math.PI;
-  if (uW) return Math.PI/2;
+  // Count how many road tiles each adjacent road tile connects to (its "degree").
+  // A 4-way intersection scores 4; a dead-end scores 1.
+  // Buildings should face the most-connected tile = the inner road / hub.
+  function roadDegree(rx, rz) {
+    if (state.grid[key(rx, rz)]?.type !== 'road') return -1;
+    let d = 0;
+    if (state.grid[key(rx,   rz-1)]?.type === 'road') d++;
+    if (state.grid[key(rx,   rz+1)]?.type === 'road') d++;
+    if (state.grid[key(rx-1, rz  )]?.type === 'road') d++;
+    if (state.grid[key(rx+1, rz  )]?.type === 'road') d++;
+    return d;
+  }
 
-  // Step 2: all present roads are through-roads (or all 4 present).
-  // Face whichever exists, tiebreak S>E>N>W.
+  const dS = roadDegree(gx,   gz+1);
+  const dE = roadDegree(gx+1, gz  );
+  const dN = roadDegree(gx,   gz-1);
+  const dW = roadDegree(gx-1, gz  );
+
+  // Face the most-connected neighbour. Tiebreak: S > E > N > W
+  const best = Math.max(dS, dE, dN, dW);
+  if (S && dS === best) return 0;
+  if (E && dE === best) return -Math.PI/2;
+  if (N && dN === best) return Math.PI;
+  if (W && dW === best) return Math.PI/2;
+
+  // Unreachable fallback
   if (S) return 0;
   if (E) return -Math.PI/2;
   if (N) return Math.PI;
-  if (W) return Math.PI/2;
-
-  // No adjacent road — look 2 tiles out
-  if (state.grid[key(gx,   gz+2)]?.type === 'road') return 0;
-  if (state.grid[key(gx+2, gz  )]?.type === 'road') return -Math.PI/2;
-  if (state.grid[key(gx,   gz-2)]?.type === 'road') return Math.PI;
-  if (state.grid[key(gx-2, gz  )]?.type === 'road') return Math.PI/2;
-
-  // Seeded stable fallback
-  return seededRandom(gx, gz, 99) > 0.5 ? 0 : -Math.PI/2;
+  return Math.PI/2;
 }
+
 
 
 
