@@ -469,13 +469,13 @@ body.game-paused #gameCanvas {
 .pause-card {
   position: relative;
   width: min(400px, 100%);
-  background: var(--panel);
-  border: 1px solid var(--border);
+  background: rgba(8, 12, 28, 0.65); /* More transparent for glass effect */
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 24px;
   padding: 28px 26px 22px;
-  box-shadow: var(--shadow), 0 0 80px rgba(46, 230, 166, 0.1);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), 0 0 1px rgba(255,255,255,0.1) inset;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   animation: panel-entrance 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -561,12 +561,11 @@ body.game-paused #gameCanvas {
   font-size: 14px;
   padding: 14px 18px;
   border-radius: 14px;
-  border: 1px solid var(--border);
-  background: var(--glass);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
   color: rgba(255,255,255,0.9);
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
 }
 
 .pm-btn:hover {
@@ -789,7 +788,7 @@ body.game-paused #gameCanvas {
 
 .nav-btn {
   position: relative;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 18px 24px;
   border-radius: 16px;
@@ -797,8 +796,8 @@ body.game-paused #gameCanvas {
   text-align: left;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
   backdrop-filter: blur(12px);
+  /* overflow: visible; is default, but making sure */
 }
 
 .nav-btn::before {
@@ -983,8 +982,8 @@ body.game-paused #gameCanvas {
   transform: translateY(-50%) translateX(0);
   width: min(320px, 90vw);
   max-height: min(80vh, 600px);
-  background: var(--panel);
-  border: 1px solid var(--border);
+  background: rgba(8, 12, 28, 0.7); /* Transparent for glass effect */
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 24px;
   padding: 0;
   z-index: 26;
@@ -1281,11 +1280,11 @@ body.game-paused #gameCanvas {
 .sm-panel {
   position: relative;
   width: min(680px, 96vw);
-  background: linear-gradient(160deg, rgba(15,23,42,0.92) 0%, rgba(8,12,28,0.96) 100%);
-  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(15, 23, 42, 0.7); /* Transparent for glass effect */
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 24px;
   padding: 28px 30px 30px;
-  box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 1px rgba(255,255,255,0.06) inset;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1) inset;
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
   transform: translateY(30px) scale(0.96);
