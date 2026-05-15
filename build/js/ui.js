@@ -131,25 +131,16 @@ document.querySelectorAll('.build-btn').forEach(btn=>{
 document.querySelectorAll('.cat-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     playSound('click');
-    const menu = document.getElementById('build-menu');
-    const targetId = btn.dataset.folder;
-    const folder = document.getElementById(targetId);
-    
-    // If clicking the same active category, close it
-    if (btn.classList.contains('active')) {
-      btn.classList.remove('active');
-      folder?.classList.remove('active');
-      menu.classList.remove('has-active-folder');
-      return;
-    }
-
-    // Otherwise, close others and open this one
     document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.build-folder').forEach(f => f.classList.remove('active'));
-    
     btn.classList.add('active');
-    folder?.classList.add('active');
-    menu.classList.add('has-active-folder');
+    const targetId = btn.dataset.folder;
+    document.querySelectorAll('.build-folder').forEach(folder => {
+      if (folder.id === targetId) {
+        folder.classList.add('active');
+      } else {
+        folder.classList.remove('active');
+      }
+    });
   });
 });
 
