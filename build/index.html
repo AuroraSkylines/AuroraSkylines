@@ -1,578 +1,274 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Aurora Skylines</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css"/>
-  <link rel="stylesheet" href="auth.css"/>
-  
-  <!-- Supabase & Auth Initialization -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase.js"></script>
-  <script src="js/authUi.js"></script>
-  <script>
-    function hasSave() {
-      try { return !!localStorage.getItem('aurora-skylines-save-v1'); } catch (e) { return false; }
-    }
-
-    function startGame(loadSave) {
-      var mainMenu = document.getElementById('main-menu');
-      if (mainMenu) mainMenu.style.display = 'none';
-
-      if (typeof init === 'function') {
-        init(loadSave);
-      } else {
-        console.error('Game engine (core.js) not loaded yet.');
-      }
-    }
-
-    function showConfirm(title, body, onOk) {
-      const modal = document.getElementById('confirm-modal');
-      const t = document.querySelector('.confirm-title');
-      const b = document.getElementById('confirm-body');
-      const btnOk = document.getElementById('confirm-ok');
-      const btnCancel = document.getElementById('confirm-cancel');
-      if (!modal || !t || !b || !btnOk || !btnCancel) return;
-
-      t.textContent = title;
-      b.textContent = body;
-      modal.classList.remove('hidden');
-
-      const close = () => modal.classList.add('hidden');
-      btnCancel.onclick = close;
-      btnOk.onclick = () => { close(); if (onOk) onOk(); };
-    }
-
-    function startGameNew() {
-      showConfirm(
-        "Start fresh?",
-        "This will clear your current temporary session and start a brand new city. Ready?",
-        () => {
-          try { localStorage.removeItem('aurora-skylines-save-v1'); } catch (e) {}
-          sessionStorage.removeItem('aurora-active-slot');
-          startGame(false);
-        }
-      );
-    }
-
-    function openSaveManager() {
-      var el = document.getElementById('save-manager');
-      if (el) {
-        el.classList.add('sm-open');
-        el.setAttribute('aria-hidden', 'false');
-        if (typeof window.renderSaveManager === 'function') window.renderSaveManager();
-      }
-    }
-
-    function closeSaveManager() {
-      var el = document.getElementById('save-manager');
-      if (el) {
-        el.classList.remove('sm-open');
-        el.setAttribute('aria-hidden', 'true');
-      }
-    }
-  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Aurora Skylines | Next-Gen City Builder</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
-  <div id="auth-screen" class="auth-overlay">
-    <div class="auth-card">
-      <div class="auth-header">
-        <h1>Aurora Skylines</h1>
-        <p class="auth-subtitle">Private Alpha Access</p>
-      </div>
-      <div class="auth-tabs">
-        <button id="tab-login" class="auth-tab active">Login</button>
-        <button id="tab-register" class="auth-tab">Register</button>
-      </div>
-      
-      <div id="auth-login-form" class="auth-form active">
-        <input type="text" id="login-username" placeholder="Username" class="auth-input">
-        <input type="password" id="login-password" placeholder="Password" class="auth-input">
-        <button id="btn-login" class="auth-btn">Enter City</button>
-        <div id="login-error" class="auth-error hidden"></div>
-      </div>
-
-      <div id="auth-register-form" class="auth-form hidden">
-        <input type="text" id="reg-username" placeholder="Username" class="auth-input">
-        <input type="password" id="reg-password" placeholder="Password" class="auth-input">
-        <input type="text" id="reg-invite" placeholder="Invite Key (e.g. CHILL-ALPHA-0001)" class="auth-input">
-        <button id="btn-register" class="auth-btn">Claim Access</button>
-        <div id="reg-error" class="auth-error hidden"></div>
-      </div>
-      <div id="auth-loading" class="auth-loading hidden">Authenticating...</div>
-    </div>
-  </div>
-
-
-  <audio id="bgMusic" loop src="music.mp3"></audio>
-
-  <div id="main-menu">
-    <div class="logo-container">
-      <div class="main-logo-text">AURORA SKYLINES</div>
-      <div class="menu-tagline">The Ultimate City Simulator</div>
-    </div>
-    
-    <div class="menu-nav">
-      <button type="button" class="nav-btn" id="btn-new" onclick="startGameNew()">
-        <span class="nav-btn-label">New Game</span>
-        <span class="nav-btn-desc">Start a fresh skyline</span>
-      </button>
-      <button type="button" class="nav-btn" id="btn-load" onclick="openSaveManager()">
-        <span class="nav-btn-label">Load Game</span>
-        <span class="nav-btn-desc">Continue your legacy</span>
-      </button>
-      <button type="button" class="nav-btn" id="btn-settings" onclick="document.getElementById('settings-overlay').classList.add('is-visible')">
-        <span class="nav-btn-label">Settings</span>
-        <span class="nav-btn-desc">Graphics & Audio</span>
-      </button>
-    </div>
-
-    <div id="account-btn" class="account-btn" onclick="openAccountManager()">
-      <span class="account-icon">👤</span> Account
-    </div>
-
-    <div id="version-display" class="version-display" onclick="openPatchnotes()">
-      <div class="version-dot"></div>
-      <span id="version-text">Checking version...</span>
-    </div>
-  </div>
-
-  <!-- ── ACCOUNT MANAGER OVERLAY ──────────── -->
-  <div id="account-overlay" aria-hidden="true" class="modal-overlay hidden">
-    <div class="account-card">
-      <div class="account-header-premium">
-        <div class="account-avatar">👤</div>
-        <h2 class="account-title-premium">Account Profile</h2>
-        <p class="account-user-badge" id="account-username">ADMIN</p>
-      </div>
-      
-      <div class="account-section">
-        <label class="account-label">Security</label>
-        <div class="account-input-group">
-          <input type="password" id="account-new-password" placeholder="New Password" class="glass-input">
-          <button id="btn-change-password" class="pm-btn">Update Password</button>
-        </div>
-        <div id="account-msg" class="auth-error hidden"></div>
-      </div>
-
-      <div class="account-divider"></div>
-
-      <div class="account-actions-grid">
-        <button type="button" class="pm-btn pm-btn--settings hidden" id="btn-open-admin" onclick="openAdminManager()">
-          <span class="btn-icon">🔑</span> Manage Keys
-        </button>
-        <button type="button" class="pm-btn" onclick="closeAccountManager()">Close</button>
-        <button type="button" class="pm-btn pm-btn--danger" id="btn-logout">Log Out</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── ADMIN KEY MANAGER OVERLAY ──────────── -->
-  <div id="admin-overlay" aria-hidden="true" class="modal-overlay hidden">
-    <div class="pause-card" style="width: min(440px, 100%); margin: auto; max-height: 80vh; display: flex; flex-direction: column;">
-      <h2 class="pause-title">Alpha Keys</h2>
-      <p class="pause-hint" style="margin-top: -2px; margin-bottom: 16px;">Admin Key Manager</p>
-      
-      <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-        <input type="text" id="admin-key-prefix" placeholder="Prefix (e.g. ALPHA-)" class="auth-input" style="flex: 1; padding: 10px; border-radius: 10px;">
-        <button id="btn-generate-key" class="pm-btn pm-btn--primary" style="padding: 10px 16px; font-size: 13px;">Generate</button>
-      </div>
-      <div id="admin-msg" class="auth-error hidden" style="margin-bottom: 12px;"></div>
-
-      <div id="admin-keys-list" style="flex: 1; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; border: 1px solid rgba(255,255,255,0.05); min-height: 150px;">
-        <div style="text-align: center; color: rgba(255,255,255,0.3); font-family: var(--fu); font-size: 12px; padding: 20px;">Loading keys...</div>
-      </div>
-
-      <div class="pause-actions" style="margin-top:20px;">
-        <button type="button" class="pm-btn" onclick="closeAdminManager()">Back</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── PATCHNOTES OVERLAY ──────────── -->
-  <div id="patchnotes-overlay" aria-hidden="true" class="modal-overlay hidden">
-    <div class="pause-card" style="width: min(500px, 100%); margin: auto; max-height: 80vh; display: flex; flex-direction: column;">
-      <h2 class="pause-title">Patch Notes</h2>
-      <p class="pause-hint" style="margin-top: -2px; margin-bottom: 16px;">Latest GitHub Commits</p>
-      
-      <div id="patchnotes-list" style="flex: 1; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 12px; border: 1px solid rgba(255,255,255,0.05); min-height: 200px;">
-        <div style="text-align: center; color: rgba(255,255,255,0.3); font-family: var(--fu); font-size: 12px; padding: 20px;">Fetching latest changes...</div>
-      </div>
-
-      <div class="pause-actions" style="margin-top:20px;">
-        <button type="button" class="pm-btn" onclick="closePatchnotes()">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── PATCHNOTES OVERLAY ──────────── -->
-  <div id="patchnotes-overlay" aria-hidden="true" class="modal-overlay hidden">
-    <div class="pause-card" style="width: min(550px, 100%); margin: auto; max-height: 85vh; display: flex; flex-direction: column;">
-      <h2 class="pause-title">Patch Notes</h2>
-      <p class="pause-hint" style="margin-top: -2px; margin-bottom: 16px;">Latest updates from GitHub</p>
-      
-      <div id="patchnotes-list" class="patchnotes-container" style="flex: 1; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 12px; border: 1px solid rgba(255,255,255,0.05); min-height: 250px;">
-        <div style="text-align: center; color: rgba(255,255,255,0.3); font-family: var(--fu); font-size: 12px; padding: 20px;">Fetching latest changes...</div>
-      </div>
-
-      <div class="pause-actions" style="margin-top:20px;">
-        <button type="button" class="pm-btn" onclick="closePatchnotes()">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── SETTINGS OVERLAY ─────────────────── -->
-  <div id="settings-overlay" aria-hidden="true">
-    <div class="pause-backdrop" onclick="document.getElementById('settings-overlay').classList.remove('is-visible')"></div>
-    <div class="pause-card">
-      <h2 class="pause-title">Settings</h2>
-      
-      <div class="settings-tabs">
-        <button class="settings-tab active" onclick="switchSettingsTab(this, 'settings-tab-graphics')">Graphics</button>
-        <button class="settings-tab" onclick="switchSettingsTab(this, 'settings-tab-audio')">Audio</button>
-        <button class="settings-tab" onclick="switchSettingsTab(this, 'settings-tab-gameplay')">Gameplay</button>
-      </div>
-
-      <div id="settings-tab-graphics" class="settings-panel active">
-        <div class="pause-audio" style="margin-top:10px; border-top:none; padding-top:0;">
-          <div class="settings-row">
-            <label class="settings-label">Shadow Quality</label>
-            <select id="gfx-shadow" class="settings-select" onchange="setGraphicsQuality('shadowQuality', this.value)">
-              <option value="off">Off</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
-          </div>
-          <div class="settings-row">
-            <label class="settings-label">Render Distance</label>
-            <select id="gfx-distance" class="settings-select" onchange="setGraphicsQuality('renderDistance', this.value)">
-              <option value="near">Near</option>
-              <option value="medium">Medium</option>
-              <option value="far">Far</option>
-            </select>
-          </div>
-          <div class="settings-row">
-            <label class="settings-label">Particle Effects</label>
-            <select id="gfx-particles" class="settings-select" onchange="setGraphicsQuality('particles', this.value)">
-              <option value="on">On</option>
-              <option value="off">Off</option>
-            </select>
-          </div>
-          <div class="settings-row">
-            <label class="settings-label">Street Lights</label>
-            <select id="gfx-lights" class="settings-select" onchange="setGraphicsQuality('streetLights', this.value)">
-              <option value="on">On</option>
-              <option value="off">Off</option>
-            </select>
-          </div>
-          <div class="settings-row">
-            <label class="settings-label">Water Effects</label>
-            <select id="gfx-water" class="settings-select" onchange="setGraphicsQuality('waterEffects', this.value)">
-              <option value="on">On</option>
-              <option value="off">Off</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div id="settings-tab-audio" class="settings-panel hidden">
-        <div class="pause-audio" style="margin-top:10px; border-top:none; padding-top:0;">
-          <div class="settings-row">
-            <label class="settings-label">Music</label>
-            <button type="button" id="music-toggle-main" class="music-toggle-btn">Pause</button>
-          </div>
-          <div class="settings-row">
-            <label class="settings-label">Volume</label>
-            <span id="vol-label-main">25%</span>
-          </div>
-          <input type="range" id="music-vol-main" min="0" max="100" value="25" class="vol-slider">
-        </div>
-      </div>
-
-      <div id="settings-tab-gameplay" class="settings-panel hidden">
-        <div class="pause-audio" style="margin-top:10px; border-top:none; padding-top:0;">
-          <div class="settings-row">
-            <label class="settings-label">Menu Background Slot</label>
-            <select id="menu-bg-selector" class="settings-select" onchange="updateMenuBg(this.value)">
-              <option value="aurora-save-slot-1">Slot 1 (Default)</option>
-              <option value="aurora-save-slot-2">Slot 2</option>
-              <option value="aurora-save-slot-3">Slot 3</option>
-              <option value="aurora-save-slot-4">Slot 4</option>
-              <option value="aurora-save-slot-5">Slot 5</option>
-              <option value="aurora-save-slot-6">Slot 6</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div class="pause-actions" style="margin-top:30px;">
-        <button type="button" class="pm-btn" onclick="document.getElementById('settings-overlay').classList.remove('is-visible')">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    function switchSettingsTab(btn, tabId) {
-      const card = btn.closest('.pause-card');
-      card.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
-      card.querySelectorAll('.settings-panel').forEach(p => p.classList.add('hidden'));
-      btn.classList.add('active');
-      document.getElementById(tabId).classList.remove('hidden');
-    }
-    function applyDaySpeed(val) {
-      if (typeof state !== 'undefined') {
-        state.DAY_LEN = 30 / parseFloat(val);
-      }
-    }
-    function openIngameSettings() {
-      const el = document.getElementById('ingame-settings-overlay');
-      if (el) { el.classList.add('is-visible'); el.setAttribute('aria-hidden', 'false'); }
-    }
-    function closeIngameSettings() {
-      const el = document.getElementById('ingame-settings-overlay');
-      if (el) { el.classList.remove('is-visible'); el.setAttribute('aria-hidden', 'true'); }
-    }
-  </script>
 
   <canvas id="gameCanvas"></canvas>
 
-  <div id="pause-overlay" aria-hidden="true">
-    <div class="pause-backdrop"></div>
-    <div class="pause-card">
-
-      <!-- Header -->
-      <div class="pause-header">
-        <div class="pause-badge">⏸</div>
-        <div>
-          <h2 class="pause-title">Game Paused</h2>
-          <p class="pause-hint"><kbd>ESC</kbd> / <kbd>P</kbd> to resume</p>
-        </div>
-      </div>
-
-      <!-- Actions -->
-      <div class="pause-actions" style="margin-top:20px;">
-        <button type="button" class="pm-btn pm-btn--primary" id="pause-resume">▶︎ Resume</button>
-        <button type="button" class="pm-btn" id="pause-save-open">💾 Save Manager</button>
-        <button type="button" class="pm-btn pm-btn--danger" id="pause-quit">Save &amp; Quit to Menu</button>
-        <button type="button" class="pm-btn pm-btn--settings" id="pause-settings-open" onclick="openIngameSettings()">&#9881; Settings</button>
-      </div>
-
-      <p class="pause-foot"><kbd>WASD</kbd> / arrows pan &nbsp;·&nbsp; drag &nbsp;·&nbsp; wheel to zoom</p>
-    </div>
-  </div>
-
-  <!-- ── IN-GAME SETTINGS OVERLAY ──────────────────── -->
-  <div id="ingame-settings-overlay" aria-hidden="true">
-    <div class="pause-backdrop" onclick="closeIngameSettings()"></div>
-    <div class="pause-card">
-      <h2 class="pause-title">Settings</h2>
-
-      <div class="settings-tabs">
-        <button class="settings-tab active" onclick="switchSettingsTab(this, 'igs-tab-graphics')">Graphics</button>
-        <button class="settings-tab" onclick="switchSettingsTab(this, 'igs-tab-audio')">Audio</button>
-      </div>
-
-      <!-- Graphics -->
-      <div id="igs-tab-graphics" class="settings-panel">
-        <div class="pause-audio" style="margin-top:10px; border-top:none; padding-top:0;">
-          <div class="settings-row">
-            <label class="settings-label">Shadow Quality</label>
-            <select id="igs-gfx-shadow" class="settings-select" onchange="setGraphicsQuality('shadowQuality', this.value); document.getElementById('gfx-shadow').value = this.value;">
-              <option value="off">Off</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
-          </div>
-          <div class="settings-row">
-            <label class="settings-label">Render Distance</label>
-            <select id="igs-gfx-distance" class="settings-select" onchange="setGraphicsQuality('renderDistance', this.value); document.getElementById('gfx-distance').value = this.value;">
-              <option value="near">Near</option>
-              <option value="medium">Medium</option>
-              <option value="far">Far</option>
-            </select>
-          </div>
-          <div class="settings-row">
-            <label class="settings-label">Particle Effects</label>
-            <select id="igs-gfx-particles" class="settings-select" onchange="setGraphicsQuality('particles', this.value); document.getElementById('gfx-particles').value = this.value;">
-              <option value="on">On</option>
-              <option value="off">Off</option>
-            </select>
-          </div>
-          <div class="settings-row">
-            <label class="settings-label">Street Lights</label>
-            <select id="igs-gfx-lights" class="settings-select" onchange="setGraphicsQuality('streetLights', this.value); document.getElementById('gfx-lights').value = this.value;">
-              <option value="on">On</option>
-              <option value="off">Off</option>
-            </select>
-          </div>
-          <div class="settings-row">
-            <label class="settings-label">Water Effects</label>
-            <select id="igs-gfx-water" class="settings-select" onchange="setGraphicsQuality('waterEffects', this.value); document.getElementById('gfx-water').value = this.value;">
-              <option value="on">On</option>
-              <option value="off">Off</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <!-- Audio -->
-      <div id="igs-tab-audio" class="settings-panel hidden">
-        <div class="pause-audio" style="margin-top:10px; border-top:none; padding-top:0;">
-          <div class="settings-row">
-            <label class="settings-label">Music</label>
-            <button type="button" id="music-toggle" class="music-toggle-btn">Pause</button>
-          </div>
-          <div class="settings-row">
-            <label class="settings-label">Volume</label>
-            <span id="vol-label">25%</span>
-          </div>
-          <input type="range" id="music-vol" min="0" max="100" value="25" class="vol-slider">
-        </div>
-      </div>
-
-
-      <div class="pause-actions" style="margin-top:24px;">
-        <button type="button" class="pm-btn" onclick="closeIngameSettings()">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── SAVE MANAGER ─────────────────────── -->
-  <div id="save-manager" aria-hidden="true">
-    <div class="sm-backdrop"></div>
-    <div class="sm-panel">
-      <div class="sm-head">
-        <div class="sm-title">💾 Save Manager</div>
-        <button type="button" class="sm-close" id="save-manager-close">✕</button>
-      </div>
-      <p class="sm-hint">6 save slots — each stores full city state with statistics.</p>
-      <div class="sm-slots sm-slots-target" id="sm-slots"></div>
-    </div>
-  </div>
-
+  <!-- HUD: DATA CELLS -->
   <div id="top-bar">
     <div id="hud-stats">
-      <div class="res-pill"><span class="pill-icon">🕒</span><span class="rv" id="game-clock">12:00</span></div>
-      <div class="res-pill"><span class="pill-icon">👥</span><span class="rv" id="val-pop">0</span></div>
-      <div class="res-pill" id="pill-energy"><span class="pill-icon">⚡</span><span class="rv" id="val-energy">0</span></div>
-      <div class="res-pill day-pill"><span class="pill-icon">🌅</span> Day <span id="day-num">1</span></div>
-      <div class="res-pill money-pill" id="money-pill" title="Income: +0 €/h">
-        <span class="pill-icon">💵</span><span class="rv" id="val-gold">2.000&nbsp;€</span>
+      <div class="res-pill money-pill" id="money-pill">
+        <span class="pill-icon">🪙</span>
+        <span class="rv" id="val-gold">0</span>
+      </div>
+      <div class="res-pill pop-pill">
+        <span class="pill-icon">👥</span>
+        <span class="rv" id="val-pop">0</span>
+      </div>
+      <div class="res-pill energy-pill" id="pill-energy">
+        <span class="pill-icon">⚡</span>
+        <span class="rv" id="val-energy">0</span>
+      </div>
+      <div class="res-pill day-pill">
+        <span class="pill-icon">🗓️</span>
+        <span class="rv">Day <span id="day-num">1</span></span>
       </div>
     </div>
   </div>
 
-  <p id="esc-hint"><kbd>ESC</kbd> · <kbd>P</kbd> menu</p>
-
-  <div class="fab-row">
-    <button type="button" class="fab" id="pause-fab" title="Menu (ESC or P)">⏸</button>
-    <button type="button" class="fab" id="upgrades-btn" title="City upgrades">⬆</button>
+  <div id="clock-container">
+    <div id="game-clock">06:00</div>
   </div>
 
+  <!-- BUILD MENU: SIDE SHELF -->
   <div id="build-menu">
     <div class="build-folders">
-      <div class="build-folder active" id="folder-roads">
-        <button type="button" class="build-btn active" data-type="road"><span class="bi">🛣️</span><span class="bl">Road</span><span class="bc">10&nbsp;€</span></button>
+      <!-- Housing -->
+      <div id="folder-housing" class="build-folder">
+        <button class="build-btn" data-type="house">
+          <span class="bi">🏠</span>
+          <span class="bl">Small House</span>
+          <span class="bc">200 €</span>
+        </button>
+        <button class="build-btn" data-type="apartment">
+          <span class="bi">🏢</span>
+          <span class="bl">Apartment</span>
+          <span class="bc">1.2k €</span>
+        </button>
       </div>
-      <div class="build-folder" id="folder-zones">
-        <button type="button" class="build-btn" data-type="house"><span class="bi">🏠</span><span class="bl">House</span><span class="bc">50&nbsp;€</span></button>
-        <button type="button" class="build-btn" data-type="apartment"><span class="bi">🏢</span><span class="bl">Apt</span><span class="bc">150&nbsp;€</span></button>
-        <button type="button" class="build-btn" data-type="shop"><span class="bi">🏪</span><span class="bl">Shop</span><span class="bc">80&nbsp;€</span></button>
-        <button type="button" class="build-btn" data-type="factory"><span class="bi">🏭</span><span class="bl">Factory</span><span class="bc">200&nbsp;€</span></button>
+      <!-- Industry -->
+      <div id="folder-industry" class="build-folder">
+        <button class="build-btn" data-type="shop">
+          <span class="bi">🏪</span>
+          <span class="bl">Retail Shop</span>
+          <span class="bc">800 €</span>
+        </button>
+        <button class="build-btn" data-type="factory">
+          <span class="bi">🏭</span>
+          <span class="bl">Factory</span>
+          <span class="bc">3.5k €</span>
+        </button>
       </div>
-      <div class="build-folder" id="folder-services">
-        <button type="button" class="build-btn" data-type="park"><span class="bi">🌳</span><span class="bl">Park</span><span class="bc">40&nbsp;€</span></button>
-        <button type="button" class="build-btn" data-type="windturbine"><span class="bi">💨</span><span class="bl">Wind</span><span class="bc">80&nbsp;€</span></button>
-        <button type="button" class="build-btn" data-type="solar"><span class="bi">☀️</span><span class="bl">Solar</span><span class="bc">150&nbsp;€</span></button>
-        <button type="button" class="build-btn" data-type="nuclear"><span class="bi">☢️</span><span class="bl">Nuclear</span><span class="bc">400&nbsp;€</span></button>
+      <!-- Utility -->
+      <div id="folder-util" class="build-folder">
+        <button class="build-btn" data-type="road">
+          <span class="bi">🛣️</span>
+          <span class="bl">Road</span>
+          <span class="bc">20 €</span>
+        </button>
+        <button class="build-btn" data-type="power">
+          <span class="bi">🔋</span>
+          <span class="bl">Solar Plant</span>
+          <span class="bc">5k €</span>
+        </button>
+        <button class="build-btn" data-type="park">
+          <span class="bi">🌳</span>
+          <span class="bl">City Park</span>
+          <span class="bc">1.5k €</span>
+        </button>
       </div>
-      <div class="build-folder" id="folder-tools">
-        <button type="button" class="build-btn demo-btn" data-type="demolish"><span class="bi">🗑️</span><span class="bl">Demo</span><span class="bc">—</span></button>
+      <!-- Special -->
+      <div id="folder-spec" class="build-folder">
+        <button class="build-btn" data-type="demolish">
+          <span class="bi">🗑️</span>
+          <span class="bl">Demolish</span>
+          <span class="bc">Free</span>
+        </button>
       </div>
     </div>
+
     <div class="build-categories">
-      <button type="button" class="cat-btn active" data-folder="folder-roads"><span class="cat-icon">🛣️</span> Roads</button>
-      <button type="button" class="cat-btn" data-folder="folder-zones"><span class="cat-icon">🏢</span> Zones</button>
-      <button type="button" class="cat-btn" data-folder="folder-services"><span class="cat-icon">⚡</span> Services</button>
-      <button type="button" class="cat-btn" data-folder="folder-tools"><span class="cat-icon">🔨</span> Tools</button>
+      <button class="cat-btn" data-folder="folder-housing" title="Housing">
+        <i class="bi bi-houses-fill"></i>
+      </button>
+      <button class="cat-btn" data-folder="folder-industry" title="Industry">
+        <i class="bi bi-buildings-fill"></i>
+      </button>
+      <button class="cat-btn" data-folder="folder-util" title="Utilities">
+        <i class="bi bi-lightning-charge-fill"></i>
+      </button>
+      <button class="cat-btn" data-folder="folder-spec" title="Tools">
+        <i class="bi bi-tools"></i>
+      </button>
     </div>
   </div>
 
-  <div id="upgrades-panel" class="hidden" aria-hidden="true">
-    <div class="upgrades-head">
-      <div class="upgrades-title">City upgrades<span>Invest in your skyline</span></div>
-      <button type="button" id="upgrades-close">✕</button>
-    </div>
-    <div id="upgrades-list"></div>
+  <!-- FLOATING ACTIONS -->
+  <div class="fab-row">
+    <button class="fab" id="pause-fab" title="Pause Menu (ESC)">
+      <i class="bi bi-list"></i>
+    </button>
+    <button class="fab" id="upgrades-btn" title="Upgrades">
+      <i class="bi bi-arrow-up-circle-fill"></i>
+    </button>
   </div>
 
-  <div id="build-tooltip" class="hidden"></div>
-  <div id="confirm-modal" class="modal-overlay hidden">
-    <div class="confirm-card">
-      <div class="confirm-title">Are you sure?</div>
-      <div class="confirm-body" id="confirm-body">Do you really want to delete this city? This cannot be undone.</div>
-      <div class="confirm-actions">
-        <button type="button" class="confirm-btn confirm-btn--cancel" id="confirm-cancel">Cancel</button>
-        <button type="button" class="confirm-btn confirm-btn--danger" id="confirm-ok">Delete</button>
+  <!-- MODALS -->
+  <div id="pause-overlay" class="modal-overlay">
+    <div class="pause-card">
+      <div class="pause-title">GAME PAUSED</div>
+      <div class="pause-hint">System is on standby. Press <kbd>ESC</kbd> to resume.</div>
+      <div class="pause-actions">
+        <button class="pm-btn pm-btn--primary" id="pause-resume">
+          <i class="bi bi-play-fill"></i> Resume City
+        </button>
+        <button class="pm-btn" id="pause-save-open">
+          <i class="bi bi-cloud-arrow-up-fill"></i> Save Manager
+        </button>
+        <button class="pm-btn" onclick="toggleSettings()">
+          <i class="bi bi-gear-fill"></i> Settings
+        </button>
+        <button class="pm-btn pm-btn--danger" id="pause-quit">
+          <i class="bi bi-box-arrow-right"></i> Quit to Menu
+        </button>
       </div>
     </div>
   </div>
 
+  <div id="settings-overlay" class="modal-overlay">
+    <div class="pause-card">
+      <div class="pause-title">SYSTEM SETTINGS</div>
+      <div class="pause-hint">Global configuration and hardware calibration.</div>
+      <div id="settings-content">
+        <!-- Settings tabs/panels would go here, assuming they are dynamically rendered or were static -->
+        <div class="settings-row">
+           <span class="settings-label">Interface Scale</span>
+           <select class="settings-select">
+             <option>100% (Standard)</option>
+             <option>125% (High Res)</option>
+           </select>
+        </div>
+        <div class="settings-row">
+           <span class="settings-label">Shadow Quality</span>
+           <select class="settings-select">
+             <option>Ultra (Cinematic)</option>
+             <option>High</option>
+             <option>Performance</option>
+           </select>
+        </div>
+      </div>
+      <button class="pm-btn pm-btn--primary" style="margin-top: 24px; width: 100%;" onclick="toggleSettings()">
+        Apply & Close
+      </button>
+    </div>
+  </div>
+
+  <div id="patchnotes-overlay" class="modal-overlay hidden">
+    <div class="sm-panel pause-card" style="width: min(600px, 90vw);">
+      <div class="sm-head">
+        <div class="sm-title">PATCH LOG</div>
+        <button class="sm-close" onclick="closePatchNotes()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div id="patch-list" style="max-height: 50vh; overflow-y: auto; margin-top: 20px;"></div>
+    </div>
+  </div>
+
+  <div id="save-manager" class="modal-overlay">
+    <div class="sm-panel pause-card" style="width: min(900px, 96vw);">
+      <div class="sm-head">
+        <div class="sm-title">SAVE VAULT</div>
+        <button class="sm-close" id="save-manager-close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="sm-hint">Select a cloud terminal to synchronize your city state.</div>
+      <div id="sm-slots" class="sm-slots"></div>
+    </div>
+  </div>
+
+  <div id="upgrades-panel" class="modal-overlay hidden">
+    <div class="pause-card" style="width: min(500px, 94vw); padding: 32px;">
+      <div class="upgrades-head">
+        <div class="upgrades-title">TECHNOLOGY TREE <span>Enhance your infrastructure</span></div>
+        <button id="upgrades-close" class="sm-close"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div id="upgrades-list"></div>
+    </div>
+  </div>
+
+  <!-- MAIN MENU -->
+  <div id="main-menu">
+    <div class="logo-container">
+      <div class="main-logo-text">AURORA SKYLINES</div>
+      <div class="menu-tagline">Architect of the Future</div>
+    </div>
+    
+    <div class="menu-nav">
+      <button class="nav-btn" onclick="startGame()">
+        <span class="nav-btn-label">New Simulation</span>
+        <span class="nav-btn-desc">Begin a fresh urban project.</span>
+      </button>
+      <button class="nav-btn" onclick="openSaveManager()">
+        <span class="nav-btn-label">Load Terminal</span>
+        <span class="nav-btn-desc">Resume your existing city states.</span>
+      </button>
+      <button class="nav-btn" onclick="toggleSettings()">
+        <span class="nav-btn-label">System Settings</span>
+        <span class="nav-btn-desc">Calibrate graphics and audio.</span>
+      </button>
+    </div>
+
+    <div class="version-display" onclick="openPatchNotes()">
+      <span class="version-dot patch-blink"></span>
+      v1.2.0-Alpha
+    </div>
+  </div>
+
+  <!-- ACCOUNT MODAL -->
+  <div id="account-overlay" class="modal-overlay hidden">
+    <div class="account-card">
+      <div class="account-header-premium">
+        <div class="account-avatar">👤</div>
+        <div class="account-title-premium" id="account-username">Administrator</div>
+        <div class="account-user-badge">Verified Architect</div>
+      </div>
+      
+      <div class="account-section">
+        <label class="account-label">Security Protocol</label>
+        <div class="account-input-group">
+          <input type="password" id="account-new-password" placeholder="New Terminal Key" class="glass-input">
+          <button id="btn-change-password" class="pm-btn pm-btn--primary">Update Key</button>
+        </div>
+      </div>
+
+      <div class="pm-btn pm-btn--danger" onclick="logout()">
+        <i class="bi bi-box-arrow-left"></i> Deauthorize Session
+      </div>
+      
+      <button class="pm-btn" style="margin-top: 12px; width: 100%;" onclick="closeAccount()">
+        Return to System
+      </button>
+    </div>
+  </div>
+
+  <!-- TOASTS -->
   <div id="toast"></div>
   <div id="event-toast"></div>
+  <div id="build-tooltip" class="hidden"></div>
 
-
-
-  <audio id="bgMusic" loop src="music.mp3"></audio>
-  <div id="loading">
-    <div class="load-inner">
-      <div class="load-city">
-        <div class="lb b1"></div><div class="lb b2"></div><div class="lb b3"></div>
-        <div class="lb b4"></div><div class="lb b5"></div>
-      </div>
-      <div class="load-title">AURORA</div>
-      <div class="load-sub">Skylines loading</div>
-    </div>
-  </div>
-
-  <script src="vendor/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/BufferGeometryUtils.js"></script>
-  <script src="js/gfx.js"></script>
-  <script>
-    // Initialize UI dropdowns with values from gfxManager
-    document.addEventListener('DOMContentLoaded', () => {
-      const g = window.gfxSettings;
-      document.getElementById('gfx-shadow').value = g.shadowQuality;
-      document.getElementById('gfx-distance').value = g.renderDistance;
-      document.getElementById('gfx-particles').value = g.particles;
-      document.getElementById('gfx-lights').value = g.streetLights;
-      document.getElementById('gfx-water').value = g.waterEffects;
-      
-      document.getElementById('igs-gfx-shadow').value = g.shadowQuality;
-      document.getElementById('igs-gfx-distance').value = g.renderDistance;
-      document.getElementById('igs-gfx-particles').value = g.particles;
-      document.getElementById('igs-gfx-lights').value = g.streetLights;
-      document.getElementById('igs-gfx-water').value = g.waterEffects;
-    });
-  </script>
-  <script src="js/constants.js"></script>
+  <!-- Scripts -->
   <script src="js/state.js"></script>
-  <script src="js/utils.js"></script>
-  <script src="js/audio.js"></script>
-  <script src="js/saveManager.js"></script>
   <script src="js/renderer.js"></script>
-  <script src="js/world.js"></script>
   <script src="js/buildings.js"></script>
-  <script src="js/roads.js"></script>
-  <script src="js/traffic.js"></script>
+  <script src="js/saveManager.js"></script>
   <script src="js/ui.js"></script>
-  <script src="js/input.js"></script>
-  <script src="js/core.js"></script>
-  <script src="js/patchnotes.js"></script>
+  <script src="js/game.js"></script>
 </body>
 </html>
