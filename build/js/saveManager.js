@@ -29,7 +29,7 @@ async function renderSaveManager() {
     card.className = 'sm-slot' + (slot ? ' has-save' : ' empty');
     
     if (slot && typeof slot === 'object') {
-      const date = slot.savedAt ? new Date(slot.savedAt).toLocaleString() : 'Recent';
+      const date = slot.savedAt ? new Date(slot.savedAt).toLocaleDateString() : 'Recent';
       const day = slot.day || 1;
       const gold = slot.gold || 0;
       const inMenu = (typeof isBackgroundMode === 'undefined') || isBackgroundMode;
@@ -37,7 +37,7 @@ async function renderSaveManager() {
       card.innerHTML = `
         <div class="sm-slot-num">${id}</div>
         <div class="sm-slot-info">
-          <div class="sm-slot-name">Slot ${id} <span class="sm-tag">READY</span></div>
+          <div class="sm-slot-name">City Slot ${id} <span class="sm-tag">READY</span></div>
           <div class="sm-slot-ts">${date}</div>
           <div class="sm-stats">
             <div class="sm-stat">Day <span>${day}</span></div>
@@ -45,14 +45,23 @@ async function renderSaveManager() {
           </div>
         </div>
         <div class="sm-slot-actions">
-          ${inMenu ? `<button class="sm-btn sm-btn--load" onclick="window.loadFromSlot(${id})">Load</button>` : `<button class="sm-btn sm-btn--save" onclick="window.saveToSlot(${id})">Overwrite</button>`}
+          ${inMenu ? 
+            `<button class="sm-btn sm-btn--load" onclick="window.loadFromSlot(${id})" style="flex:1;">Load</button>` : 
+            `<button class="sm-btn sm-btn--save" onclick="window.saveToSlot(${id})" style="flex:1;">Overwrite</button>`
+          }
+          <button class="sm-btn sm-btn--del" onclick="window.deleteSlot(${id})" style="width: 40px; padding: 8px 0;" title="Delete">🗑️</button>
         </div>
       `;
     } else {
       card.innerHTML = `
         <div class="sm-slot-num">${id}</div>
-        <div class="sm-slot-info"><div class="sm-slot-name">Empty Slot</div></div>
-        <div class="sm-slot-actions"><button class="sm-btn sm-btn--save" onclick="window.saveToSlot(${id})">Start New</button></div>
+        <div class="sm-slot-info">
+          <div class="sm-slot-name">Empty Terminal</div>
+          <div class="sm-slot-ts">Cloud slot available</div>
+        </div>
+        <div class="sm-slot-actions">
+          <button class="sm-btn sm-btn--save" onclick="window.saveToSlot(${id})" style="flex:1;">Initialize City</button>
+        </div>
       `;
     }
     container.appendChild(card);
